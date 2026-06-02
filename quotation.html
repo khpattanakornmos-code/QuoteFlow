@@ -258,12 +258,16 @@ function recalc() {
   document.getElementById('disp-total').textContent = QuoteFlow.baht(total);
 }
 
-/* ── Save ──────────────────────────────────────────────── */
+/* ── Save — ป้องกันกดซ้ำ ────────────────────────────────── */
+var _saving = false;
+
 function saveQuotation(status) {
+  if (_saving) return; // ป้องกันกดซ้ำ
   var items = getItems().filter(function(i) { return i.name; });
   var cn    = document.getElementById('customerName').value.trim();
   if (!cn)       { QuoteFlow.toast('กรุณาใส่ชื่อลูกค้า', 'error'); return; }
   if (!items.length) { QuoteFlow.toast('กรุณาเพิ่มรายการอย่างน้อย 1 รายการ', 'error'); return; }
+
   var sub    = items.reduce(function(s, i) { return s + i.qty * i.price; }, 0);
   var useVat = document.getElementById('vatCheck').checked;
   var vat    = useVat ? sub * 0.07 : 0;
@@ -275,15 +279,24 @@ function saveQuotation(status) {
   var editId = document.getElementById('editId').value;
   var action = editId ? 'updateQuotation' : 'createQuotation';
   if (editId) data.id = editId;
+
+  // ล็อก + แสดง loading
+  _saving = true;
+  QuoteFlow.toast('⏳ กำลังบันทึก...', 'info');
+
   QuoteFlow.api(action, data).then(function(res) {
+    _saving = false;
     if (res.success) {
-      QuoteFlow.toast(editId ? 'อัปเดตสำเร็จ!' : 'สร้างใบ ' + (res.id||'') + ' สำเร็จ!', 'success');
+      QuoteFlow.toast(editId ? 'อัปเดตสำเร็จ! ✅' : 'สร้างใบ ' + (res.id||'') + ' สำเร็จ! ✅', 'success');
       QuoteFlow.closeModal('qtModal');
       resetForm();
       loadQuotations();
     } else {
       QuoteFlow.toast('เกิดข้อผิดพลาด: ' + (res.error||''), 'error');
     }
+  }).catch(function() {
+    _saving = false;
+    QuoteFlow.toast('เชื่อมต่อไม่ได้ กรุณาลองใหม่', 'error');
   });
 }
 
