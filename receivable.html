@@ -71,7 +71,7 @@
       </div>
       <div class="topbar-actions">
         <button class="btn btn-outline btn-sm" onclick="loadRv()">🔄</button>
-        <button class="btn btn-primary" onclick="QuoteFlow.openModal('rvAddModal')">+ เพิ่มยอดหนี้</button>
+        <button class="btn btn-primary" onclick="QuoteFlow.QuoteFlow.openModal('rvAddModal')">+ เพิ่มยอดหนี้</button>
       </div>
     </div>
 
@@ -130,7 +130,7 @@
   <div class="modal modal-sm">
     <div class="modal-header">
       <div class="modal-title">📌 เพิ่มยอดหนี้ลูกค้า</div>
-      <button class="modal-close" onclick="QuoteFlow.closeModal('rvAddModal')">✕</button>
+      <button class="modal-close" onclick="QuoteFlow.QuoteFlow.closeModal('rvAddModal')">✕</button>
     </div>
     <div class="form-group mb-14">
       <label class="form-label">ชื่อลูกค้า *</label>
@@ -159,7 +159,7 @@
       <input class="form-input" id="rvNote" placeholder="หมายเหตุเพิ่มเติม...">
     </div>
     <div class="flex-center gap-10" style="justify-content:flex-end;">
-      <button class="btn btn-outline" onclick="QuoteFlow.closeModal('rvAddModal')">ยกเลิก</button>
+      <button class="btn btn-outline" onclick="QuoteFlow.QuoteFlow.closeModal('rvAddModal')">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveRv()">💾 บันทึก</button>
     </div>
   </div>
@@ -170,7 +170,7 @@
   <div class="modal modal-sm">
     <div class="modal-header">
       <div class="modal-title">💳 อัปเดตการรับชำระ</div>
-      <button class="modal-close" onclick="QuoteFlow.closeModal('payUpdateModal')">✕</button>
+      <button class="modal-close" onclick="QuoteFlow.QuoteFlow.closeModal('payUpdateModal')">✕</button>
     </div>
     <input type="hidden" id="pId">
 
@@ -204,7 +204,7 @@
     </div>
 
     <div class="flex-center gap-10" style="justify-content:flex-end;">
-      <button class="btn btn-outline" onclick="QuoteFlow.closeModal('payUpdateModal')">ยกเลิก</button>
+      <button class="btn btn-outline" onclick="QuoteFlow.QuoteFlow.closeModal('payUpdateModal')">ยกเลิก</button>
       <button class="btn btn-primary" onclick="updatePay()">✅ บันทึกการรับชำระ</button>
     </div>
   </div>
@@ -213,8 +213,7 @@
 <script src="assets/app.js"></script>
 <script src="assets/nav.js"></script>
 <script>
-const { api, requireAuth, baht, fmtDate, toast, openModal, closeModal } = QuoteFlow;
-requireAuth();
+QuoteFlow.requireAuth();
 injectSidebar('receivable');
 
 let rvData     = [];
@@ -222,7 +221,7 @@ let filterMode = 'all';
 let curRv      = null;
 
 async function loadRv() {
-  const res = await api('getReceivables');
+  const res = await QuoteFlow.api('getReceivables');
   if (!res.success) return;
   rvData = res.data;
   const today = new Date();
@@ -232,9 +231,9 @@ async function loadRv() {
   const paid    = rvData.filter(r=>r.status==='Paid').reduce((s,r)=>s+Number(r.amount),0);
   const overdue = rvData.filter(r=>r.status!=='Paid'&&r.dueDate&&new Date(r.dueDate)<today).length;
 
-  document.getElementById('st-unpaid').textContent  = baht(unpaid);
-  document.getElementById('st-partial').textContent = baht(partial);
-  document.getElementById('st-paid').textContent    = baht(paid);
+  document.getElementById('st-unpaid').textContent  = QuoteFlow.baht(unpaid);
+  document.getElementById('st-partial').textContent = QuoteFlow.baht(partial);
+  document.getElementById('st-paid').textContent    = QuoteFlow.baht(paid);
   document.getElementById('st-overdue').textContent = overdue;
 
   renderCards();
@@ -299,8 +298,8 @@ function renderCards() {
       </div>
 
       <div style="margin-bottom:10px;">
-        <div style="font-size:22px;font-weight:700;color:${bal>0?'var(--red)':'var(--green)'};">${baht(bal)}</div>
-        <div style="font-size:11px;color:var(--text3);">คงค้าง จากยอดรวม ${baht(total)}</div>
+        <div style="font-size:22px;font-weight:700;color:${bal>0?'var(--red)':'var(--green)'};">${QuoteFlow.baht(bal)}</div>
+        <div style="font-size:11px;color:var(--text3);">คงค้าง จากยอดรวม ${QuoteFlow.baht(total)}</div>
       </div>
 
       <div class="flex-between">
@@ -308,7 +307,7 @@ function renderCards() {
           ${statusEl}
           ${r.dueDate && r.status!=='Paid' ? `
             <span style="font-size:11px;color:${overdue?'var(--red)':due_diff<=3?'var(--amber)':'var(--text3)'};">
-              📅 ${overdue?`เกิน ${Math.abs(due_diff)} วัน`:`กำหนด ${fmtDate(r.dueDate)}`}
+              📅 ${overdue?`เกิน ${Math.abs(due_diff)} วัน`:`กำหนด ${QuoteFlow.fmtDate(r.dueDate)}`}
             </span>` : ''}
         </div>
         ${r.status!=='Paid' ? `
@@ -324,13 +323,13 @@ function openPay(id) {
   curRv = rvData.find(r => r.id === id); if (!curRv) return;
   document.getElementById('pId').value       = id;
   document.getElementById('pName').textContent      = curRv.customerName;
-  document.getElementById('pTotal').textContent     = baht(curRv.amount);
-  document.getElementById('pPaidSoFar').textContent = baht(curRv.paidAmount);
-  document.getElementById('pBalance').textContent   = baht(curRv.balance);
+  document.getElementById('pTotal').textContent     = QuoteFlow.baht(curRv.amount);
+  document.getElementById('pPaidSoFar').textContent = QuoteFlow.baht(curRv.paidAmount);
+  document.getElementById('pBalance').textContent   = QuoteFlow.baht(curRv.balance);
   document.getElementById('pNewPaid').value  = curRv.paidAmount || 0;
   document.getElementById('pNote').value     = curRv.note || '';
   document.getElementById('payPreview').textContent = '';
-  openModal('payUpdateModal');
+  QuoteFlow.openModal('payUpdateModal');
 }
 
 function updatePayPreview() {
@@ -338,7 +337,7 @@ function updatePayPreview() {
   const newPaid = Number(document.getElementById('pNewPaid').value||0);
   const bal = Number(curRv.amount) - newPaid;
   const el  = document.getElementById('payPreview');
-  el.textContent = bal <= 0 ? '✅ ชำระครบแล้ว!' : `คงค้างอีก ${baht(Math.max(0,bal))}`;
+  el.textContent = bal <= 0 ? '✅ ชำระครบแล้ว!' : `คงค้างอีก ${QuoteFlow.baht(Math.max(0,bal))}`;
   el.style.color = bal <= 0 ? 'var(--green)' : 'var(--red)';
 }
 
@@ -346,16 +345,16 @@ async function updatePay() {
   const id      = document.getElementById('pId').value;
   const paid    = Number(document.getElementById('pNewPaid').value||0);
   const note    = document.getElementById('pNote').value;
-  const res = await api('updateReceivable', { id, paidAmount: paid, note });
-  if (res.success) { toast('อัปเดตสำเร็จ! 🎉', 'success'); closeModal('payUpdateModal'); loadRv(); }
+  const res = await QuoteFlow.api('updateReceivable', { id, paidAmount: paid, note });
+  if (res.success) { QuoteFlow.toast('อัปเดตสำเร็จ! 🎉', 'success'); QuoteFlow.closeModal('payUpdateModal'); loadRv(); }
 }
 
 async function saveRv() {
   const cn  = document.getElementById('rvCustomer').value.trim();
   const amt = Number(document.getElementById('rvAmount').value);
-  if (!cn)     return toast('กรุณาใส่ชื่อลูกค้า', 'error');
-  if (!amt||amt<=0) return toast('กรุณาใส่ยอดเงิน', 'error');
-  const res = await api('addReceivable', {
+  if (!cn)     return QuoteFlow.toast('กรุณาใส่ชื่อลูกค้า', 'error');
+  if (!amt||amt<=0) return QuoteFlow.toast('กรุณาใส่ยอดเงิน', 'error');
+  const res = await QuoteFlow.api('addReceivable', {
     customerName: cn,
     quotationId : document.getElementById('rvQtId').value.trim(),
     amount      : amt,
@@ -364,8 +363,8 @@ async function saveRv() {
     note        : document.getElementById('rvNote').value.trim()
   });
   if (res.success) {
-    toast('บันทึกสำเร็จ! 🎉', 'success');
-    closeModal('rvAddModal');
+    QuoteFlow.toast('บันทึกสำเร็จ! 🎉', 'success');
+    QuoteFlow.closeModal('rvAddModal');
     ['rvCustomer','rvQtId','rvAmount','rvPaid','rvDue','rvNote'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
     document.getElementById('rvPaid').value='0';
     loadRv();
