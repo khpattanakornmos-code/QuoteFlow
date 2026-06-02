@@ -80,7 +80,7 @@
       </div>
       <div class="topbar-actions">
         <button class="btn btn-outline btn-sm" onclick="loadFinance()">🔄</button>
-        <button class="btn btn-primary" onclick="QuoteFlow.openModal('finModal')">+ บันทึกรายการ</button>
+        <button class="btn btn-primary" onclick="QuoteFlow.QuoteFlow.openModal('finModal')">+ บันทึกรายการ</button>
       </div>
     </div>
 
@@ -146,7 +146,7 @@
   <div class="modal modal-sm">
     <div class="modal-header">
       <div class="modal-title">💰 บันทึกรายการ</div>
-      <button class="modal-close" onclick="QuoteFlow.closeModal('finModal')">✕</button>
+      <button class="modal-close" onclick="QuoteFlow.QuoteFlow.closeModal('finModal')">✕</button>
     </div>
 
     <div class="type-toggle">
@@ -184,7 +184,7 @@
     </div>
 
     <div class="flex-center gap-10" style="justify-content:flex-end;">
-      <button class="btn btn-outline" onclick="QuoteFlow.closeModal('finModal')">ยกเลิก</button>
+      <button class="btn btn-outline" onclick="QuoteFlow.QuoteFlow.closeModal('finModal')">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveFin()">💾 บันทึก</button>
     </div>
   </div>
@@ -193,8 +193,7 @@
 <script src="assets/app.js"></script>
 <script src="assets/nav.js"></script>
 <script>
-const { api, requireAuth, baht, fmtDate, toast, openModal, closeModal } = QuoteFlow;
-requireAuth();
+QuoteFlow.requireAuth();
 injectSidebar('finance');
 
 let finType  = 'income';
@@ -225,16 +224,16 @@ function updateMonthLabel() {
 
 async function saveFin() {
   const amount = Number(document.getElementById('finAmount').value);
-  if (!amount || amount <= 0) return toast('กรุณาใส่จำนวนเงิน', 'error');
-  const res = await api('addFinance', {
+  if (!amount || amount <= 0) return QuoteFlow.toast('กรุณาใส่จำนวนเงิน', 'error');
+  const res = await QuoteFlow.api('addFinance', {
     type: finType,
     category: document.getElementById('finCategory').value,
     amount,
     description: document.getElementById('finDesc').value.trim()
   });
   if (res.success) {
-    toast('บันทึกสำเร็จ! 🎉', 'success');
-    closeModal('finModal');
+    QuoteFlow.toast('บันทึกสำเร็จ! 🎉', 'success');
+    QuoteFlow.closeModal('finModal');
     document.getElementById('finAmount').value = '';
     document.getElementById('finDesc').value   = '';
     loadFinance();
@@ -243,7 +242,7 @@ async function saveFin() {
 
 async function loadFinance() {
   updateMonthLabel();
-  const res = await api('getFinance', { month: viewMonth, year: viewYear });
+  const res = await QuoteFlow.api('getFinance', { month: viewMonth, year: viewYear });
   if (!res.success) return;
   finData = res.data;
 
@@ -251,12 +250,12 @@ async function loadFinance() {
   const expense = finData.filter(r => r.type==='expense').reduce((s,r) => s+Number(r.amount), 0);
   const profit  = income - expense;
 
-  document.getElementById('sum-income').textContent  = baht(income);
-  document.getElementById('sum-expense').textContent = baht(expense);
-  document.getElementById('sum-profit').textContent  = baht(profit);
+  document.getElementById('sum-income').textContent  = QuoteFlow.baht(income);
+  document.getElementById('sum-expense').textContent = QuoteFlow.baht(expense);
+  document.getElementById('sum-profit').textContent  = QuoteFlow.baht(profit);
 
   const balChip = document.getElementById('balChip');
-  balChip.textContent = (profit >= 0 ? '▲ กำไร ' : '▼ ขาดทุน ') + baht(Math.abs(profit));
+  balChip.textContent = (profit >= 0 ? '▲ กำไร ' : '▼ ขาดทุน ') + QuoteFlow.baht(Math.abs(profit));
   balChip.className   = 'balance-chip ' + (profit >= 0 ? 'bal-pos' : 'bal-neg');
 
   const pc = document.getElementById('profitCard');
@@ -281,11 +280,11 @@ function renderTxList() {
       <div class="tx-icon ${r.type==='income'?'tx-income':'tx-expense'}">${r.type==='income'?'💚':'❤️'}</div>
       <div style="flex:1;min-width:0;">
         <div style="font-weight:600;font-size:13.5px;color:var(--text);">${r.category||'-'}</div>
-        <div style="font-size:12px;color:var(--text3);">${r.description||'–'} &nbsp;·&nbsp; ${fmtDate(r.date)}</div>
+        <div style="font-size:12px;color:var(--text3);">${r.description||'–'} &nbsp;·&nbsp; ${QuoteFlow.fmtDate(r.date)}</div>
       </div>
       <div style="text-align:right;flex-shrink:0;">
         <div style="font-size:15px;font-weight:700;color:${r.type==='income'?'var(--green)':'var(--red)'};">
-          ${r.type==='income'?'+':'-'}${baht(r.amount)}
+          ${r.type==='income'?'+':'-'}${QuoteFlow.baht(r.amount)}
         </div>
         <span class="badge ${r.type==='income'?'badge-active':'badge-unpaid'}" style="font-size:10px;">${r.type==='income'?'รายรับ':'รายจ่าย'}</span>
       </div>
@@ -295,8 +294,8 @@ function renderTxList() {
 
 async function delFin(id) {
   if (!confirm('ลบรายการนี้?')) return;
-  const res = await api('deleteFinance', { id });
-  if (res.success) { toast('ลบแล้ว', 'warn'); loadFinance(); }
+  const res = await QuoteFlow.api('deleteFinance', { id });
+  if (res.success) { QuoteFlow.toast('ลบแล้ว', 'warn'); loadFinance(); }
 }
 
 // Category filter
