@@ -1,56 +1,74 @@
 // ============================================================
 // QuoteFlow — app.js
-// แก้ไข: CORS สำหรับ Google Apps Script + robust error handling
+// ใช้ GET + query string แทน POST เพื่อแก้ปัญหา CORS
+// Apps Script รองรับ GET โดยไม่มี CORS ปัญหา
 // ============================================================
 
-const CONFIG = {
-  // 🔴 ใส่ Web App URL จาก Apps Script ของคุณ
-  API_URL: 'https://script.google.com/macros/s/AKfycbz-Ji_OC_2DLLYZ7K15kN13wAwe8KgVRYgFnvjgaBjg3AZAp5WXx8JznDF9IFqoeDEk/exec',
-  // 🔴 ใส่ Google Client ID ของคุณ
+var CONFIG = {
+  API_URL: 'https://script.google.com/macros/s/AKfycbz8Mq6xakjExjY-V11y76X4OKgkVIxznQcOF45YeDBOruIpCO5L0OdtAAxkUduudp4O/exec',
   GOOGLE_CLIENT_ID: '637690103992-85cf7gvvu6a57bbrnbga826oh0t4bvvi.apps.googleusercontent.com',
 };
 
-// ── API — แก้ CORS ให้ถูกต้องสำหรับ Apps Script ──────────
-async function api(action, data = {}) {
-  const user = getUser();
-  const payload = { action, data, email: user?.email || '' };
+// ── API — ใช้ GET ผ่าน JSONP (แก้ CORS 100%) ──────────────
+function api(action, data) {
+  data = data || {};
+  var user  = getUser();
+  var email = (user && user.email) ? user.email : '';
 
-  try {
-    // Apps Script ต้องการ no-cors หรือ redirect follow
-    const url = new URL(CONFIG.API_URL);
-    
-    const res = await fetch(CONFIG.API_URL, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      redirect: 'follow',
-    });
+  return new Promise(function(resolve) {
+    // สร้าง unique callback name
+    var cbName = 'qfcb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    
-    // Apps Script kadang return redirect, parse text
-    try {
-      return JSON.parse(text);
-    } catch {
-      // ถ้า parse ไม่ได้ ลอง clean แล้ว parse ใหม่
-      const clean = text.replace(/^\s*\)]\}',?\s*/, '').trim();
-      return JSON.parse(clean);
+    // Build URL
+    var params = [
+      'action=' + encodeURIComponent(action),
+      'email='  + encodeURIComponent(email),
+      'data='   + encodeURIComponent(JSON.stringify(data)),
+      'callback=' + cbName
+    ].join('&');
+    var url = CONFIG.API_URL + '?' + params;
+
+    // Timeout 15 วินาที
+    var timer = setTimeout(function() {
+      cleanup();
+      console.error('API timeout:', action);
+      QuoteFlow.toast('การเชื่อมต่อ Server หมดเวลา กรุณาลองใหม่', 'warn');
+      resolve({ success: false, error: 'timeout' });
+    }, 15000);
+
+    // JSONP callback
+    window[cbName] = function(result) {
+      cleanup();
+      resolve(result);
+    };
+
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cbName];
+      var el = document.getElementById(cbName);
+      if (el) el.remove();
     }
-  } catch (e) {
-    console.error('API Error:', e);
-    toast('ไม่สามารถเชื่อมต่อ Server ได้ กรุณาตรวจสอบ Apps Script URL', 'error');
-    return { success: false, error: e.message };
-  }
+
+    // inject script tag
+    var script = document.createElement('script');
+    script.id  = cbName;
+    script.src = url;
+    script.onerror = function() {
+      cleanup();
+      console.error('API script error:', action);
+      QuoteFlow.toast('ไม่สามารถเชื่อมต่อ Server ได้', 'error');
+      resolve({ success: false, error: 'script_error' });
+    };
+    document.head.appendChild(script);
+  });
 }
 
 // ── AUTH ───────────────────────────────────────────────────
 function getUser() {
   try {
-    const raw = localStorage.getItem('qf_user');
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch { return null; }
+    var raw = localStorage.getItem('qf_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
 }
 
 function setUser(u) {
@@ -59,62 +77,49 @@ function setUser(u) {
 
 function logout() {
   localStorage.removeItem('qf_user');
-  // Google sign out
-  try {
-    google.accounts.id.disableAutoSelect();
-  } catch(e) {}
+  try { google.accounts.id.disableAutoSelect(); } catch(e) {}
   window.location.href = 'index.html';
 }
 
 function requireAuth() {
-  const user = getUser();
-  if (!user) {
-    window.location.href = 'index.html';
-    return null;
-  }
+  var user = getUser();
+  if (!user) { window.location.href = 'index.html'; return null; }
   return user;
 }
 
 function googleSignIn(callback) {
   if (typeof google === 'undefined') {
-    console.error('Google Identity script not loaded');
+    console.error('Google Identity not loaded');
     return;
   }
   google.accounts.id.initialize({
     client_id: CONFIG.GOOGLE_CLIENT_ID,
-    callback: async (response) => {
-      try {
-        const payload = parseJwt(response.credential);
-        const result  = await api('login', {
-          email: payload.email,
-          name : payload.name || payload.email.split('@')[0],
+    callback: function(response) {
+      var payload = parseJwt(response.credential);
+      api('login', { email: payload.email, name: payload.name || payload.email.split('@')[0] })
+        .then(function(result) {
+          var user;
+          if (result.success) {
+            user = result.user;
+          } else {
+            // fallback ถ้า API ยังไม่พร้อม
+            user = {
+              email: payload.email,
+              name : payload.name || payload.email.split('@')[0],
+              role : 'admin'
+            };
+          }
+          setUser(user);
+          if (callback) callback(user);
         });
-        if (result.success) {
-          setUser(result.user);
-          if (callback) callback(result.user);
-        } else {
-          // fallback — save locally even if API fails
-          const fallbackUser = {
-            email: payload.email,
-            name : payload.name || payload.email.split('@')[0],
-            role : 'admin',
-          };
-          setUser(fallbackUser);
-          if (callback) callback(fallbackUser);
-        }
-      } catch(e) {
-        console.error('Login error:', e);
-      }
     },
     auto_select: false,
-    cancel_on_tap_outside: true,
   });
 
-  const btnEl = document.getElementById('googleBtn');
+  var btnEl = document.getElementById('googleBtn');
   if (btnEl) {
     google.accounts.id.renderButton(btnEl, {
-      theme: 'outline', size: 'large', shape: 'pill',
-      width: Math.min(300, window.innerWidth - 80),
+      theme: 'outline', size: 'large', shape: 'pill', width: 300
     });
     google.accounts.id.prompt();
   }
@@ -122,26 +127,20 @@ function googleSignIn(callback) {
 
 function parseJwt(token) {
   try {
-    const base64 = token.split('.')[1]
-      .replace(/-/g, '+').replace(/_/g, '/');
-    const json = decodeURIComponent(
-      atob(base64).split('').map(c =>
-        '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-      ).join('')
+    var base64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    var json   = decodeURIComponent(
+      atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join('')
     );
     return JSON.parse(json);
-  } catch(e) {
-    console.error('JWT parse error:', e);
-    return {};
-  }
+  } catch(e) { return {}; }
 }
 
 // ── FORMAT ─────────────────────────────────────────────────
 function baht(n) {
-  const num = Number(n) || 0;
-  return '฿' + num.toLocaleString('th-TH', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+  return '฿' + (Number(n) || 0).toLocaleString('th-TH', {
+    minimumFractionDigits: 2, maximumFractionDigits: 2
   });
 }
 
@@ -149,40 +148,44 @@ function fmtDate(d) {
   if (!d) return '-';
   try {
     return new Date(d).toLocaleDateString('th-TH', {
-      year: 'numeric', month: 'short', day: 'numeric',
+      year:'numeric', month:'short', day:'numeric'
     });
-  } catch { return '-'; }
+  } catch(e) { return '-'; }
 }
 
-function shortId(id) { return id ? String(id).substring(0, 12) : '-'; }
+function shortId(id) { return id ? String(id).substring(0,12) : '-'; }
 
 // ── TOAST ──────────────────────────────────────────────────
-function toast(msg, type = 'success') {
-  let container = document.getElementById('qf-toast-container');
+function toast(msg, type) {
+  type = type || 'success';
+  var container = document.getElementById('qf-toast-container');
   if (!container) {
     container = document.createElement('div');
     container.id = 'qf-toast-container';
-    container.style.cssText = [
-      'position:fixed', 'bottom:24px', 'right:24px',
-      'z-index:99999', 'display:flex', 'flex-direction:column',
-      'gap:8px', 'pointer-events:none',
-    ].join(';');
+    container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
     document.body.appendChild(container);
   }
 
-  const colors = {
+  var colors = {
     success: { bg:'#d1fae5', border:'#6ee7b7', text:'#065f46', icon:'✅' },
     error:   { bg:'#fee2e2', border:'#fca5a5', text:'#991b1b', icon:'❌' },
     warn:    { bg:'#fef3c7', border:'#fcd34d', text:'#92400e', icon:'⚠️' },
     info:    { bg:'#dbeafe', border:'#93c5fd', text:'#1e40af', icon:'ℹ️' },
   };
-  const c = colors[type] || colors.info;
+  var c = colors[type] || colors.info;
 
-  const el = document.createElement('div');
+  if (!document.getElementById('qf-toast-style')) {
+    var s = document.createElement('style');
+    s.id = 'qf-toast-style';
+    s.textContent = '@keyframes qfIn{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}';
+    document.head.appendChild(s);
+  }
+
+  var el = document.createElement('div');
   el.style.cssText = [
-    `background:${c.bg}`,
-    `border:1.5px solid ${c.border}`,
-    `color:${c.text}`,
+    'background:' + c.bg,
+    'border:1.5px solid ' + c.border,
+    'color:' + c.text,
     'padding:11px 18px',
     'border-radius:12px',
     "font-family:'Prompt',sans-serif",
@@ -196,147 +199,119 @@ function toast(msg, type = 'success') {
     'pointer-events:auto',
     'animation:qfIn .3s cubic-bezier(.4,0,.2,1)',
   ].join(';');
-
-  // Inject keyframe once
-  if (!document.getElementById('qf-toast-style')) {
-    const s = document.createElement('style');
-    s.id = 'qf-toast-style';
-    s.textContent = '@keyframes qfIn{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}';
-    document.head.appendChild(s);
-  }
-
-  el.innerHTML = `<span style="font-size:16px;flex-shrink:0">${c.icon}</span><span>${msg}</span>`;
+  el.innerHTML = '<span style="font-size:16px;flex-shrink:0">' + c.icon + '</span><span>' + msg + '</span>';
   container.appendChild(el);
 
-  setTimeout(() => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateX(110%)';
+  setTimeout(function() {
+    el.style.opacity    = '0';
+    el.style.transform  = 'translateX(110%)';
     el.style.transition = 'all .25s';
-    setTimeout(() => el.remove(), 260);
+    setTimeout(function() { el.remove(); }, 260);
   }, 3500);
 }
 
 // ── MODAL ──────────────────────────────────────────────────
 function openModal(id) {
-  const el = document.getElementById(id);
+  var el = document.getElementById(id);
   if (el) el.classList.add('open');
 }
 function closeModal(id) {
-  const el = document.getElementById(id);
+  var el = document.getElementById(id);
   if (el) el.classList.remove('open');
 }
 
 // ── PDF EXPORT ─────────────────────────────────────────────
-async function exportQuotationPDF(qt) {
-  if (!window.jspdf) {
-    toast('กำลังโหลด PDF library...', 'info');
-    return;
-  }
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+function exportQuotationPDF(qt) {
+  if (!window.jspdf) { toast('กำลังโหลด PDF...','info'); return; }
+  var doc = new window.jspdf.jsPDF({ unit:'mm', format:'a4' });
 
-  // Header
-  doc.setFillColor(59, 130, 246);
-  doc.rect(0, 0, 210, 36, 'F');
-  doc.setFillColor(96, 165, 250);
-  doc.rect(0, 30, 210, 6, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(22); doc.setFont('helvetica', 'bold');
-  doc.text('QuoteFlow', 14, 15);
-  doc.setFontSize(9);  doc.setFont('helvetica', 'normal');
-  doc.text('QUOTATION', 14, 24);
-  doc.text(qt.id || '', 196, 15, { align: 'right' });
-  doc.text(fmtDate(qt.createdAt), 196, 24, { align: 'right' });
+  doc.setFillColor(59,130,246); doc.rect(0,0,210,36,'F');
+  doc.setFillColor(96,165,250); doc.rect(0,30,210,6,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(22); doc.setFont('helvetica','bold');
+  doc.text('QuoteFlow',14,15);
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text('QUOTATION',14,24);
+  doc.text(qt.id||'',196,15,{align:'right'});
+  doc.text(fmtDate(qt.createdAt),196,24,{align:'right'});
 
-  // Customer
-  doc.setTextColor(30, 58, 95);
-  doc.setFontSize(9);
-  doc.text('Customer:', 14, 50);
-  doc.setFontSize(14); doc.setFont('helvetica', 'bold');
-  doc.text(qt.customerName || '-', 14, 60);
-  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(30,58,95);
+  doc.setFontSize(9); doc.text('Customer:',14,50);
+  doc.setFontSize(14); doc.setFont('helvetica','bold');
+  doc.text(qt.customerName||'-',14,60);
+  doc.setFont('helvetica','normal');
 
-  // Items
-  const items = Array.isArray(qt.items) ? qt.items : [];
-  let y = 75;
-  doc.setFillColor(236, 245, 255);
-  doc.rect(12, y - 5, 186, 10, 'F');
-  doc.setFontSize(8); doc.setFont('helvetica', 'bold');
-  doc.setTextColor(74, 111, 165);
-  doc.text('รายการ', 15, y);
-  doc.text('จำนวน', 110, y);
-  doc.text('ราคา/หน่วย', 138, y);
-  doc.text('รวม', 196, y, { align: 'right' });
-  doc.setFont('helvetica', 'normal'); doc.setTextColor(30, 58, 95);
+  var items = Array.isArray(qt.items) ? qt.items : [];
+  var y = 75;
+  doc.setFillColor(236,245,255); doc.rect(12,y-5,186,10,'F');
+  doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(74,111,165);
+  doc.text('รายการ',15,y); doc.text('จำนวน',110,y);
+  doc.text('ราคา/หน่วย',138,y); doc.text('รวม',196,y,{align:'right'});
+  doc.setFont('helvetica','normal'); doc.setTextColor(30,58,95);
   y += 8;
 
-  items.forEach((item, i) => {
-    if (i % 2 === 0) {
-      doc.setFillColor(248, 251, 255);
-      doc.rect(12, y - 4, 186, 8, 'F');
-    }
+  items.forEach(function(item, i) {
+    if (i%2===0){ doc.setFillColor(248,251,255); doc.rect(12,y-4,186,8,'F'); }
     doc.setFontSize(9);
-    doc.text(String(item.name || '').substring(0, 44), 15, y);
-    doc.text(String(item.qty || 1), 110, y);
-    doc.text(baht(item.price), 138, y);
-    doc.text(baht((item.qty || 1) * (item.price || 0)), 196, y, { align: 'right' });
+    doc.text(String(item.name||'').substring(0,44),15,y);
+    doc.text(String(item.qty||1),110,y);
+    doc.text(baht(item.price),138,y);
+    doc.text(baht((item.qty||1)*(item.price||0)),196,y,{align:'right'});
     y += 8;
   });
 
-  // Totals
   y += 6;
-  doc.setDrawColor(212, 226, 244); doc.line(12, y, 198, y);
-  y += 8;
-  doc.setFontSize(9); doc.setTextColor(74, 111, 165);
-  doc.text('Subtotal:', 142, y); doc.text(baht(qt.subtotal), 196, y, { align: 'right' }); y += 6;
-  doc.text('VAT 7%:', 142, y);   doc.text(baht(qt.vat), 196, y, { align: 'right' }); y += 6;
-  doc.setFillColor(59, 130, 246);
-  doc.roundedRect(130, y - 5, 68, 12, 2, 2, 'F');
-  doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
-  doc.text('ยอดรวม:', 142, y + 3);
-  doc.text(baht(qt.total), 196, y + 3, { align: 'right' });
+  doc.setDrawColor(212,226,244); doc.line(12,y,198,y); y += 8;
+  doc.setFontSize(9); doc.setTextColor(74,111,165);
+  doc.text('Subtotal:',142,y); doc.text(baht(qt.subtotal),196,y,{align:'right'}); y+=6;
+  doc.text('VAT 7%:',142,y);   doc.text(baht(qt.vat),196,y,{align:'right'}); y+=6;
+  doc.setFillColor(59,130,246); doc.roundedRect(130,y-5,68,12,2,2,'F');
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.text('ยอดรวม:',142,y+3); doc.text(baht(qt.total),196,y+3,{align:'right'});
 
-  if (qt.note) {
-    y += 18; doc.setTextColor(74, 111, 165);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
-    doc.text('หมายเหตุ: ' + qt.note, 14, y);
+  if (qt.note){
+    y+=18; doc.setTextColor(74,111,165);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8);
+    doc.text('หมายเหตุ: '+qt.note,14,y);
   }
 
-  // Footer
-  doc.setFillColor(238, 245, 251);
-  doc.rect(0, 275, 210, 22, 'F');
-  doc.setTextColor(147, 174, 212); doc.setFontSize(7);
-  doc.text(
-    'สร้างโดย QuoteFlow Business Suite  •  ' + new Date().toLocaleDateString('th-TH'),
-    105, 285, { align: 'center' }
-  );
-
-  doc.save(`Quotation-${qt.id || 'QT'}.pdf`);
+  doc.setFillColor(238,245,251); doc.rect(0,275,210,22,'F');
+  doc.setTextColor(147,174,212); doc.setFontSize(7);
+  doc.text('สร้างโดย QuoteFlow Business Suite  •  '+new Date().toLocaleDateString('th-TH'),105,285,{align:'center'});
+  doc.save('Quotation-'+(qt.id||'QT')+'.pdf');
 }
 
 // ── SHARE ──────────────────────────────────────────────────
 function shareQuotation(qt) {
-  const text = [
-    `📋 ใบเสนอราคา ${qt.id || ''}`,
-    `👤 ลูกค้า: ${qt.customerName || '-'}`,
-    `💰 ยอดรวม: ${baht(qt.total)}`,
-    `📅 วันที่: ${fmtDate(qt.createdAt)}`,
+  var text = [
+    '📋 ใบเสนอราคา ' + (qt.id||''),
+    '👤 ลูกค้า: ' + (qt.customerName||'-'),
+    '💰 ยอดรวม: ' + baht(qt.total),
+    '📅 วันที่: ' + fmtDate(qt.createdAt),
   ].join('\n');
-
   if (navigator.share) {
-    navigator.share({ title: `Quotation ${qt.id}`, text });
+    navigator.share({ title:'Quotation '+(qt.id||''), text:text });
   } else {
     navigator.clipboard.writeText(text)
-      .then(() => toast('คัดลอกข้อมูลแล้ว!', 'info'))
-      .catch(() => toast('ไม่สามารถคัดลอกได้', 'error'));
+      .then(function(){ toast('คัดลอกแล้ว!','info'); })
+      .catch(function(){ toast('ไม่สามารถคัดลอกได้','error'); });
   }
 }
 
 // ── EXPOSE ─────────────────────────────────────────────────
 window.QuoteFlow = {
-  api,
-  getUser, setUser, logout, requireAuth, googleSignIn,
-  baht, fmtDate, shortId,
-  toast, openModal, closeModal,
-  exportQuotationPDF, shareQuotation,
+  api            : api,
+  getUser        : getUser,
+  setUser        : setUser,
+  logout         : logout,
+  requireAuth    : requireAuth,
+  googleSignIn   : googleSignIn,
+  baht           : baht,
+  fmtDate        : fmtDate,
+  shortId        : shortId,
+  toast          : toast,
+  openModal      : openModal,
+  closeModal     : closeModal,
+  exportQuotationPDF : exportQuotationPDF,
+  shareQuotation : shareQuotation,
 };
