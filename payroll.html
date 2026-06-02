@@ -68,7 +68,7 @@
       </div>
       <div class="topbar-actions">
         <button class="btn btn-outline btn-sm" onclick="loadPayroll()">🔄</button>
-        <button class="btn btn-primary" onclick="QuoteFlow.openModal('payModal')">+ เพิ่มรายการ</button>
+        <button class="btn btn-primary" onclick="QuoteFlow.QuoteFlow.openModal('payModal')">+ เพิ่มรายการ</button>
       </div>
     </div>
 
@@ -121,7 +121,7 @@
   <div class="modal modal-sm">
     <div class="modal-header">
       <div class="modal-title">👷 เพิ่มรายการค่าแรง</div>
-      <button class="modal-close" onclick="QuoteFlow.closeModal('payModal')">✕</button>
+      <button class="modal-close" onclick="QuoteFlow.QuoteFlow.closeModal('payModal')">✕</button>
     </div>
 
     <!-- Worker type toggle -->
@@ -149,7 +149,7 @@
     </div>
 
     <div class="flex-center gap-10" style="justify-content:flex-end;">
-      <button class="btn btn-outline" onclick="QuoteFlow.closeModal('payModal')">ยกเลิก</button>
+      <button class="btn btn-outline" onclick="QuoteFlow.QuoteFlow.closeModal('payModal')">ยกเลิก</button>
       <button class="btn btn-primary" onclick="savePay()">💾 บันทึก</button>
     </div>
   </div>
@@ -158,8 +158,7 @@
 <script src="assets/app.js"></script>
 <script src="assets/nav.js"></script>
 <script>
-const { api, requireAuth, baht, fmtDate, toast, openModal, closeModal } = QuoteFlow;
-requireAuth();
+QuoteFlow.requireAuth();
 injectSidebar('payroll');
 
 let payData   = [];
@@ -174,7 +173,7 @@ function setWT(type, btn) {
 }
 
 async function loadPayroll() {
-  const res = await api('getPayroll');
+  const res = await QuoteFlow.api('getPayroll');
   if (!res.success) return;
   payData = res.data;
 
@@ -183,10 +182,10 @@ async function loadPayroll() {
   const external = payData.filter(r=>r.workerType==='ช่างนอก').reduce((s,r)=>s+Number(r.amount),0);
   const paid     = payData.filter(r=>r.status==='Paid').reduce((s,r)=>s+Number(r.amount),0);
 
-  document.getElementById('st-pending').textContent  = baht(pending);
-  document.getElementById('st-internal').textContent = baht(internal);
-  document.getElementById('st-external').textContent = baht(external);
-  document.getElementById('st-paid').textContent     = baht(paid);
+  document.getElementById('st-pending').textContent  = QuoteFlow.baht(pending);
+  document.getElementById('st-internal').textContent = QuoteFlow.baht(internal);
+  document.getElementById('st-external').textContent = QuoteFlow.baht(external);
+  document.getElementById('st-paid').textContent     = QuoteFlow.baht(paid);
 
   renderCards();
 }
@@ -214,7 +213,7 @@ function renderCards() {
       const diff = Math.ceil((due - today) / 86400000);
       if (diff < 0)    { dueClass='due-overdue'; dueLabel=`เกิน ${Math.abs(diff)} วัน`; }
       else if (diff<=3){ dueClass='due-soon';    dueLabel=`อีก ${diff} วัน`; }
-      else              { dueLabel = fmtDate(r.dueDate); }
+      else              { dueLabel = QuoteFlow.fmtDate(r.dueDate); }
     }
     return `
     <div class="worker-card ${r.status==='Paid'?'paid':''}">
@@ -228,7 +227,7 @@ function renderCards() {
         </div>
       </div>
 
-      <div style="font-size:22px;font-weight:700;color:var(--blue);margin-bottom:6px;">${baht(r.amount)}</div>
+      <div style="font-size:22px;font-weight:700;color:var(--blue);margin-bottom:6px;">${QuoteFlow.baht(r.amount)}</div>
       <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">${r.description||'–'}</div>
 
       <div class="flex-between">
@@ -247,9 +246,9 @@ function renderCards() {
 async function savePay() {
   const wn = document.getElementById('workerName').value.trim();
   const am = Number(document.getElementById('payAmount').value);
-  if (!wn) return toast('กรุณาใส่ชื่อผู้รับ', 'error');
-  if (!am||am<=0) return toast('กรุณาใส่ยอดเงิน', 'error');
-  const res = await api('addPayroll', {
+  if (!wn) return QuoteFlow.toast('กรุณาใส่ชื่อผู้รับ', 'error');
+  if (!am||am<=0) return QuoteFlow.toast('กรุณาใส่ยอดเงิน', 'error');
+  const res = await QuoteFlow.api('addPayroll', {
     workerName: wn,
     workerType: document.getElementById('workerType').value,
     amount: am,
@@ -258,8 +257,8 @@ async function savePay() {
     status: 'Pending'
   });
   if (res.success) {
-    toast('บันทึกสำเร็จ! 🎉', 'success');
-    closeModal('payModal');
+    QuoteFlow.toast('บันทึกสำเร็จ! 🎉', 'success');
+    QuoteFlow.closeModal('payModal');
     document.getElementById('workerName').value = '';
     document.getElementById('payAmount').value  = '';
     document.getElementById('payDesc').value    = '';
@@ -269,8 +268,8 @@ async function savePay() {
 }
 
 async function markPaid(id) {
-  const res = await api('updatePayroll', { id, status: 'Paid' });
-  if (res.success) { toast('บันทึกการจ่ายแล้ว ✅', 'success'); loadPayroll(); }
+  const res = await QuoteFlow.api('updatePayroll', { id, status: 'Paid' });
+  if (res.success) { QuoteFlow.toast('บันทึกการจ่ายแล้ว ✅', 'success'); loadPayroll(); }
 }
 
 document.querySelectorAll('.f-tab').forEach(btn => {
