@@ -5,7 +5,7 @@
 // ============================================================
 
 var CONFIG = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbz8Mq6xakjExjY-V11y76X4OKgkVIxznQcOF45YeDBOruIpCO5L0OdtAAxkUduudp4O/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycbw7sXiSrH96l2BnjGbG_hgLaFi7e9iTJ7skWByk5mI56YYXVrZNARoT1Z--PEGs5qLp/exec',
   GOOGLE_CLIENT_ID: '637690103992-85cf7gvvu6a57bbrnbga826oh0t4bvvi.apps.googleusercontent.com',
 };
 
