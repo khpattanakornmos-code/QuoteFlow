@@ -4,8 +4,8 @@
 
 const CONFIG = {
   // 🔴 Replace with your deployed Apps Script Web App URL
-  API_URL: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec',
-  GOOGLE_CLIENT_ID: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
+  API_URL: 'https://script.google.com/macros/s/AKfycbwK4e4nqE48Qf-zRPe3XgTUv8M5F9ZU3amBdcx9fPxcUl9H1iyw7YCBhEekC8Yym8tf/exec',
+  GOOGLE_CLIENT_ID: '637690103992-85cf7gvvu6a57bbrnbga826oh0t4bvvi.apps.googleusercontent.com',
 };
 
 // ── API ────────────────────────────────────────────────────
