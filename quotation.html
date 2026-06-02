@@ -9,92 +9,65 @@
 <link rel="stylesheet" href="assets/style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-/* ── Page-specific styles ─────────────────────────── */
-.qt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.qt-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:16px; }
 
 .qt-card {
-  background: #fff; border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 20px;
-  cursor: pointer; transition: all var(--t);
-  box-shadow: var(--shadow-xs);
-  position: relative; overflow: hidden;
+  background:#fff; border:1px solid var(--border);
+  border-radius:var(--radius); padding:20px;
+  cursor:pointer; transition:all var(--t);
+  box-shadow:var(--shadow-xs);
+  position:relative; overflow:hidden;
 }
 .qt-card::before {
-  content: ''; position: absolute;
-  top: 0; left: 0; right: 0; height: 3px;
-  background: var(--blue-grad); opacity: 0;
-  transition: opacity var(--t);
+  content:''; position:absolute;
+  top:0; left:0; right:0; height:3px;
+  background:var(--blue-grad); opacity:0; transition:opacity var(--t);
 }
-.qt-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--blue-light); }
-.qt-card:hover::before { opacity: 1; }
-
-.qt-amount { font-size: 20px; font-weight: 700; color: var(--blue); }
+.qt-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-lg); border-color:var(--blue-light); }
+.qt-card:hover::before { opacity:1; }
+.qt-amount { font-size:20px; font-weight:700; color:var(--blue); }
 
 .item-row {
-  display: grid;
-  grid-template-columns: 1fr 72px 120px 110px 36px;
-  gap: 8px; align-items: center;
-  background: var(--card-alt);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  margin-bottom: 8px;
+  display:grid; grid-template-columns:1fr 72px 120px 110px 36px;
+  gap:8px; align-items:center;
+  background:var(--card-alt); border:1px solid var(--border2);
+  border-radius:var(--radius-sm); padding:10px 12px; margin-bottom:8px;
 }
 .item-num {
-  width: 22px; height: 22px; border-radius: 50%;
-  background: var(--blue-pale); color: var(--blue);
-  font-size: 11px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
+  width:22px; height:22px; border-radius:50%;
+  background:var(--blue-pale); color:var(--blue);
+  font-size:11px; font-weight:700;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
 }
 .item-img-thumb {
-  width: 44px; height: 44px; object-fit: cover;
-  border-radius: 8px; border: 1.5px solid var(--border);
-  box-shadow: var(--shadow-xs);
+  width:44px; height:44px; object-fit:cover;
+  border-radius:8px; border:1.5px solid var(--border); box-shadow:var(--shadow-xs);
 }
 .total-panel {
-  background: linear-gradient(135deg, #f0f7ff, #e8f2ff);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 18px 20px;
+  background:linear-gradient(135deg,#f0f7ff,#e8f2ff);
+  border:1px solid var(--border); border-radius:var(--radius-sm); padding:18px 20px;
 }
-.total-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; }
+.total-row { display:flex; justify-content:space-between; align-items:center; padding:7px 0; }
 .total-final {
-  font-size: 22px; font-weight: 700; color: var(--blue);
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 0 4px;
-  border-top: 2px solid var(--blue-pale);
-  margin-top: 4px;
+  font-size:22px; font-weight:700; color:var(--blue);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 0 4px; border-top:2px solid var(--blue-pale); margin-top:4px;
 }
-
-/* View modal report style */
 .qt-report-header {
-  background: var(--blue-grad);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  padding: 20px 24px; color: #fff; margin: -30px -30px 20px;
+  background:var(--blue-grad); border-radius:var(--radius-sm) var(--radius-sm) 0 0;
+  padding:20px 24px; color:#fff; margin:-30px -30px 20px;
 }
-.qt-report-table th { background: var(--blue-pale); color: var(--blue-dark); }
-.qt-report-sum { background: linear-gradient(135deg,#eff6ff,#dbeafe); border-radius: var(--radius-sm); padding: 14px 18px; }
-
-/* Filter bar */
-.filter-bar {
-  display: flex; align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap; gap: 12px;
-}
-.tab-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab-group { display:flex; gap:6px; flex-wrap:wrap; }
 .tab-btn {
-  padding: 7px 18px; border-radius: 20px; font-size: 13px;
-  font-weight: 500; cursor: pointer; border: 1.5px solid var(--border);
-  background: #fff; color: var(--text2); transition: all var(--t);
-  font-family: var(--font);
+  padding:7px 18px; border-radius:20px; font-size:13px;
+  font-weight:500; cursor:pointer; border:1.5px solid var(--border);
+  background:#fff; color:var(--text2); transition:all var(--t); font-family:var(--font);
 }
-.tab-btn:hover  { border-color: var(--blue); color: var(--blue); background: var(--blue-pale); }
-.tab-btn.active { background: var(--blue-grad); color: #fff; border-color: transparent; box-shadow: var(--shadow-sm); }
-
-.search-wrap { position: relative; }
-.search-wrap input { padding-left: 36px; min-width: 220px; }
-.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 15px; pointer-events: none; }
+.tab-btn:hover  { border-color:var(--blue); color:var(--blue); background:var(--blue-pale); }
+.tab-btn.active { background:var(--blue-grad); color:#fff; border-color:transparent; box-shadow:var(--shadow-sm); }
+.search-wrap { position:relative; }
+.search-wrap input { padding-left:36px; min-width:220px; }
+.search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text3); font-size:15px; pointer-events:none; }
 </style>
 </head>
 <body>
@@ -102,13 +75,10 @@
   <div id="nav-root"></div>
 
   <div class="main-content">
-    <!-- Topbar -->
     <div class="topbar">
       <div class="flex-center gap-12">
         <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
-        <div>
-          <div class="page-title">📋 ใบเสนอราคา</div>
-        </div>
+        <div class="page-title">📋 ใบเสนอราคา</div>
       </div>
       <div class="topbar-actions">
         <button class="btn btn-outline btn-sm" onclick="loadQuotations()">🔄</button>
@@ -117,8 +87,7 @@
     </div>
 
     <div class="page-body">
-
-      <!-- Stats row -->
+      <!-- Stats -->
       <div class="grid grid-4 mb-24">
         <div class="card stat-card blue"><div class="stat-icon">📋</div><div class="stat-value" id="st-all">0</div><div class="stat-label">ทั้งหมด</div></div>
         <div class="card stat-card" style="border-top:3px solid #64748b"><div class="stat-icon" style="background:#f1f5f9;color:#64748b">📁</div><div class="stat-value" id="st-draft">0</div><div class="stat-label">Draft</div></div>
@@ -126,9 +95,9 @@
         <div class="card stat-card green"><div class="stat-icon">✅</div><div class="stat-value" id="st-closed">0</div><div class="stat-label">Closed</div></div>
       </div>
 
-      <!-- Filter bar -->
+      <!-- Filter -->
       <div class="card mb-20" style="padding:16px 20px;">
-        <div class="filter-bar">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
           <div class="tab-group">
             <button class="tab-btn active" data-filter="all">ทั้งหมด</button>
             <button class="tab-btn" data-filter="Draft">📁 Draft</button>
@@ -143,14 +112,13 @@
         </div>
       </div>
 
-      <!-- Card grid -->
+      <!-- Grid -->
       <div id="qtGrid" class="qt-grid"></div>
+    </div>
+  </div>
+</div>
 
-    </div><!-- /page-body -->
-  </div><!-- /main-content -->
-</div><!-- /app-layout -->
-
-<!-- ═══ CREATE / EDIT MODAL ═══════════════════════════════ -->
+<!-- CREATE MODAL -->
 <div class="modal-overlay" id="qtModal">
   <div class="modal modal-lg">
     <div class="modal-header">
@@ -158,8 +126,6 @@
       <button class="modal-close" onclick="QuoteFlow.closeModal('qtModal')">✕</button>
     </div>
     <input type="hidden" id="editId">
-
-    <!-- Customer Info -->
     <div style="background:var(--blue-pale);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px;">
       <div class="form-row form-row-2">
         <div class="form-group">
@@ -167,32 +133,20 @@
           <input class="form-input" id="customerName" placeholder="ชื่อบริษัท / ชื่อลูกค้า">
         </div>
         <div class="form-group">
-          <label class="form-label">📝 หมายเหตุ / เงื่อนไข</label>
+          <label class="form-label">📝 หมายเหตุ</label>
           <input class="form-input" id="qtNote" placeholder="เช่น ชำระภายใน 30 วัน">
         </div>
       </div>
     </div>
-
-    <!-- Items header -->
     <div class="flex-between mb-12">
-      <div class="card-title" style="margin:0">🛒 รายการสินค้า / บริการ</div>
+      <div class="card-title" style="margin:0">🛒 รายการสินค้า</div>
       <button class="btn btn-ghost btn-sm" onclick="addItemRow()">+ เพิ่มรายการ</button>
     </div>
-
-    <!-- Items header row labels -->
     <div style="display:grid;grid-template-columns:1fr 72px 120px 110px 36px;gap:8px;padding:0 12px 6px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;">
-      <span>รายการสินค้า / บริการ</span>
-      <span style="text-align:center">จำนวน</span>
-      <span style="text-align:center">ราคา/หน่วย</span>
-      <span style="text-align:right">รวม</span>
-      <span></span>
+      <span>รายการ</span><span style="text-align:center">จำนวน</span><span style="text-align:center">ราคา/หน่วย</span><span style="text-align:right">รวม</span><span></span>
     </div>
-
     <div id="itemsList"></div>
-
     <hr class="divider">
-
-    <!-- Totals + VAT -->
     <div style="display:flex;justify-content:flex-end;">
       <div class="total-panel" style="min-width:280px;">
         <div class="total-row"><span class="text-sm text-muted">ยอดก่อนภาษี</span><span id="disp-sub" class="fw-bold">฿0.00</span></div>
@@ -203,26 +157,20 @@
           </label>
           <span id="disp-vat" class="text-muted text-sm">฿0.00</span>
         </div>
-        <div class="total-final">
-          <span>ยอดรวมทั้งสิ้น</span>
-          <span id="disp-total">฿0.00</span>
-        </div>
+        <div class="total-final"><span>ยอดรวมทั้งสิ้น</span><span id="disp-total">฿0.00</span></div>
       </div>
     </div>
-
-    <!-- Action buttons -->
     <div class="flex-center gap-10 mt-24" style="justify-content:flex-end;flex-wrap:wrap;">
       <button class="btn btn-outline" onclick="QuoteFlow.closeModal('qtModal')">ยกเลิก</button>
       <button class="btn btn-ghost" onclick="saveQuotation('Draft')">💾 บันทึก Draft</button>
-      <button class="btn btn-primary" onclick="saveQuotation('Confirmed')">✅ ยืนยันใบเสนอราคา</button>
+      <button class="btn btn-primary" onclick="saveQuotation('Confirmed')">✅ ยืนยัน</button>
     </div>
   </div>
 </div>
 
-<!-- ═══ VIEW MODAL ════════════════════════════════════════ -->
+<!-- VIEW MODAL -->
 <div class="modal-overlay" id="viewModal">
   <div class="modal modal-lg">
-    <!-- Header injected by JS -->
     <div id="viewContent"></div>
     <div class="flex-center gap-8 mt-20" style="flex-wrap:wrap;" id="viewActions"></div>
   </div>
@@ -231,239 +179,253 @@
 <script src="assets/app.js"></script>
 <script src="assets/nav.js"></script>
 <script>
-const { api, requireAuth, baht, fmtDate, toast, openModal, closeModal, exportQuotationPDF, shareQuotation } = QuoteFlow;
-requireAuth();
+// ── ใช้ QuoteFlow.xxx() โดยตรง ไม่ destructure เพื่อกันซ้ำ ──
+QuoteFlow.requireAuth();
 injectSidebar('quotation');
 
-let quotations = [];
-let currentQt  = null;
-let filterStatus = 'all';
-let itemCount    = 0;
+var quotations   = [];
+var currentQt    = null;
+var filterStatus = 'all';
+var itemCount    = 0;
 
 /* ── Item Rows ─────────────────────────────────────────── */
-function addItemRow(item = {}) {
-  const id  = itemCount++;
-  const num = document.querySelectorAll('#itemsList .item-row').length + 1;
-  const row = document.createElement('div');
+function addItemRow(item) {
+  item = item || {};
+  var id  = itemCount++;
+  var num = document.querySelectorAll('#itemsList .item-row').length + 1;
+  var row = document.createElement('div');
   row.className = 'item-row';
-  row.id = `item-${id}`;
-  row.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span class="item-num">${num}</span>
-      <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
-        <input class="form-input" placeholder="ชื่อสินค้า / บริการ" data-field="name" value="${item.name||''}" style="padding:8px 10px;">
-        <label style="cursor:pointer;display:flex;align-items:center;gap:5px;" title="แนบรูปสินค้า">
-          <span style="font-size:11px;color:var(--text3);">📷 แนบรูป</span>
-          <input type="file" accept="image/*" style="display:none;" onchange="previewImg(this,${id})">
-        </label>
-        <img id="img-${id}" class="item-img-thumb" style="display:${item.img?'block':'none'};" src="${item.img||''}">
-      </div>
-    </div>
-    <input class="form-input" type="number" min="1" placeholder="1" data-field="qty" value="${item.qty||1}" oninput="recalc()" style="text-align:center;padding:8px 6px;">
-    <input class="form-input" type="number" min="0" placeholder="0.00" data-field="price" value="${item.price||''}" oninput="recalc()" style="text-align:right;padding:8px 10px;">
-    <div id="amt-${id}" style="text-align:right;font-weight:700;color:var(--blue);font-size:13px;">฿0.00</div>
-    <button class="btn btn-danger btn-icon btn-sm" onclick="removeItem('item-${id}')" title="ลบ">✕</button>`;
+  row.id = 'item-' + id;
+  row.innerHTML =
+    '<div style="display:flex;align-items:center;gap:8px;">' +
+      '<span class="item-num">' + num + '</span>' +
+      '<div style="flex:1;display:flex;flex-direction:column;gap:4px;">' +
+        '<input class="form-input" placeholder="ชื่อสินค้า / บริการ" data-field="name" value="' + (item.name||'') + '" style="padding:8px 10px;">' +
+        '<label style="cursor:pointer;font-size:11px;color:var(--text3);">📷 แนบรูป<input type="file" accept="image/*" style="display:none;" onchange="previewImg(this,' + id + ')"></label>' +
+        '<img id="img-' + id + '" class="item-img-thumb" style="display:' + (item.img?'block':'none') + ';" src="' + (item.img||'') + '">' +
+      '</div>' +
+    '</div>' +
+    '<input class="form-input" type="number" min="1" placeholder="1" data-field="qty" value="' + (item.qty||1) + '" oninput="recalc()" style="text-align:center;padding:8px 6px;">' +
+    '<input class="form-input" type="number" min="0" placeholder="0.00" data-field="price" value="' + (item.price||'') + '" oninput="recalc()" style="text-align:right;padding:8px 10px;">' +
+    '<div id="amt-' + id + '" style="text-align:right;font-weight:700;color:var(--blue);font-size:13px;">฿0.00</div>' +
+    '<button class="btn btn-danger btn-icon btn-sm" onclick="removeItem(\'item-' + id + '\')" title="ลบ">✕</button>';
   document.getElementById('itemsList').appendChild(row);
   row.querySelector('[data-field="name"]').addEventListener('input', recalc);
   recalc();
 }
 
 function removeItem(id) {
-  document.getElementById(id)?.remove();
+  var el = document.getElementById(id);
+  if (el) el.remove();
   recalc();
-  // Re-number
-  document.querySelectorAll('#itemsList .item-num').forEach((el, i) => el.textContent = i + 1);
+  var nums = document.querySelectorAll('#itemsList .item-num');
+  nums.forEach(function(el, i) { el.textContent = i + 1; });
 }
 
 function previewImg(input, id) {
-  const file = input.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => { const img = document.getElementById('img-'+id); img.src = e.target.result; img.style.display = 'block'; };
+  var file = input.files[0]; if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = document.getElementById('img-' + id);
+    img.src = e.target.result; img.style.display = 'block';
+  };
   reader.readAsDataURL(file);
 }
 
 function getItems() {
-  return Array.from(document.querySelectorAll('#itemsList .item-row')).map(row => ({
-    name : row.querySelector('[data-field="name"]')?.value  || '',
-    qty  : Number(row.querySelector('[data-field="qty"]')?.value  || 1),
-    price: Number(row.querySelector('[data-field="price"]')?.value || 0),
-    img  : row.querySelector('img')?.src || ''
-  }));
+  return Array.from(document.querySelectorAll('#itemsList .item-row')).map(function(row) {
+    return {
+      name : row.querySelector('[data-field="name"]') ? row.querySelector('[data-field="name"]').value : '',
+      qty  : Number(row.querySelector('[data-field="qty"]') ? row.querySelector('[data-field="qty"]').value : 1),
+      price: Number(row.querySelector('[data-field="price"]') ? row.querySelector('[data-field="price"]').value : 0),
+      img  : row.querySelector('img') ? row.querySelector('img').src : ''
+    };
+  });
 }
 
 function recalc() {
-  const items = getItems();
-  let sub = 0;
-  items.forEach((it, i) => {
-    const amt = it.qty * it.price; sub += amt;
-    const el = document.getElementById('amt-' + i);
-    if (el) el.textContent = baht(amt);
+  var items = getItems();
+  var sub = 0;
+  items.forEach(function(it, i) {
+    var amt = it.qty * it.price; sub += amt;
+    var el = document.getElementById('amt-' + i);
+    if (el) el.textContent = QuoteFlow.baht(amt);
   });
-  const vat   = document.getElementById('vatCheck')?.checked ? sub * 0.07 : 0;
-  const total = sub + vat;
-  document.getElementById('disp-sub').textContent   = baht(sub);
-  document.getElementById('disp-vat').textContent   = baht(vat);
-  document.getElementById('disp-total').textContent = baht(total);
+  var vat   = document.getElementById('vatCheck').checked ? sub * 0.07 : 0;
+  var total = sub + vat;
+  document.getElementById('disp-sub').textContent   = QuoteFlow.baht(sub);
+  document.getElementById('disp-vat').textContent   = QuoteFlow.baht(vat);
+  document.getElementById('disp-total').textContent = QuoteFlow.baht(total);
 }
 
 /* ── Save ──────────────────────────────────────────────── */
-async function saveQuotation(status) {
-  const items = getItems().filter(i => i.name);
-  const cn = document.getElementById('customerName').value.trim();
-  if (!cn) return toast('กรุณาใส่ชื่อลูกค้า', 'error');
-  if (!items.length) return toast('กรุณาเพิ่มรายการอย่างน้อย 1 รายการ', 'error');
-  const sub   = items.reduce((s, i) => s + i.qty * i.price, 0);
-  const useVat= document.getElementById('vatCheck').checked;
-  const vat   = useVat ? sub * 0.07 : 0;
-  const data  = { customerName: cn, note: document.getElementById('qtNote').value.trim(), items, subtotal: sub, vat, total: sub + vat, status };
-  const editId = document.getElementById('editId').value;
-  const res = editId ? await api('updateQuotation', { ...data, id: editId }) : await api('createQuotation', data);
-  if (res.success) {
-    toast(editId ? 'อัปเดตสำเร็จ!' : `สร้างใบ ${res.id} สำเร็จ!`, 'success');
-    closeModal('qtModal'); resetForm(); loadQuotations();
-  } else toast('เกิดข้อผิดพลาด: ' + res.error, 'error');
+function saveQuotation(status) {
+  var items = getItems().filter(function(i) { return i.name; });
+  var cn    = document.getElementById('customerName').value.trim();
+  if (!cn)       { QuoteFlow.toast('กรุณาใส่ชื่อลูกค้า', 'error'); return; }
+  if (!items.length) { QuoteFlow.toast('กรุณาเพิ่มรายการอย่างน้อย 1 รายการ', 'error'); return; }
+  var sub    = items.reduce(function(s, i) { return s + i.qty * i.price; }, 0);
+  var useVat = document.getElementById('vatCheck').checked;
+  var vat    = useVat ? sub * 0.07 : 0;
+  var data   = {
+    customerName: cn,
+    note  : document.getElementById('qtNote').value.trim(),
+    items : items, subtotal: sub, vat: vat, total: sub + vat, status: status
+  };
+  var editId = document.getElementById('editId').value;
+  var action = editId ? 'updateQuotation' : 'createQuotation';
+  if (editId) data.id = editId;
+  QuoteFlow.api(action, data).then(function(res) {
+    if (res.success) {
+      QuoteFlow.toast(editId ? 'อัปเดตสำเร็จ!' : 'สร้างใบ ' + (res.id||'') + ' สำเร็จ!', 'success');
+      QuoteFlow.closeModal('qtModal');
+      resetForm();
+      loadQuotations();
+    } else {
+      QuoteFlow.toast('เกิดข้อผิดพลาด: ' + (res.error||''), 'error');
+    }
+  });
 }
 
-function openCreate() { resetForm(); openModal('qtModal'); }
+function openCreate() { resetForm(); QuoteFlow.openModal('qtModal'); }
 
 function resetForm() {
-  document.getElementById('editId').value = '';
-  document.getElementById('customerName').value = '';
-  document.getElementById('qtNote').value = '';
-  document.getElementById('vatCheck').checked = false;
+  document.getElementById('editId').value        = '';
+  document.getElementById('customerName').value  = '';
+  document.getElementById('qtNote').value        = '';
+  document.getElementById('vatCheck').checked    = false;
   document.getElementById('itemsList').innerHTML = '';
   document.getElementById('modalTitle').textContent = '📋 สร้างใบเสนอราคาใหม่';
   itemCount = 0; recalc();
 }
 
-/* ── Load & Render ─────────────────────────────────────── */
-async function loadQuotations() {
+/* ── Load ──────────────────────────────────────────────── */
+function loadQuotations() {
   document.getElementById('qtGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text3);">⏳ กำลังโหลด...</div>';
-  const res = await api('getQuotations');
-  if (res.success) { quotations = res.data; updateStats(); renderGrid(); }
+  QuoteFlow.api('getQuotations').then(function(res) {
+    if (res.success) { quotations = res.data; updateStats(); renderGrid(); }
+    else { document.getElementById('qtGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">⚠️</div><p>ไม่สามารถโหลดข้อมูลได้</p></div>'; }
+  });
 }
 
 function updateStats() {
   document.getElementById('st-all').textContent    = quotations.length;
-  document.getElementById('st-draft').textContent  = quotations.filter(q => q.status === 'Draft').length;
-  document.getElementById('st-active').textContent = quotations.filter(q => q.status === 'Active').length;
-  document.getElementById('st-closed').textContent = quotations.filter(q => q.status === 'Closed').length;
+  document.getElementById('st-draft').textContent  = quotations.filter(function(q) { return q.status === 'Draft'; }).length;
+  document.getElementById('st-active').textContent = quotations.filter(function(q) { return q.status === 'Active'; }).length;
+  document.getElementById('st-closed').textContent = quotations.filter(function(q) { return q.status === 'Closed'; }).length;
 }
 
 function renderGrid() {
-  const search = document.getElementById('searchInput').value.toLowerCase();
-  let list = quotations.filter(q => {
-    const ms = filterStatus === 'all' || q.status === filterStatus;
-    const mq = !search || (q.customerName||'').toLowerCase().includes(search) || (q.id||'').toLowerCase().includes(search);
+  var search = document.getElementById('searchInput').value.toLowerCase();
+  var list   = quotations.filter(function(q) {
+    var ms = filterStatus === 'all' || q.status === filterStatus;
+    var mq = !search || (q.customerName||'').toLowerCase().indexOf(search) >= 0 || (q.id||'').toLowerCase().indexOf(search) >= 0;
     return ms && mq;
-  }).sort((a, b) => (b.createdAt||'').localeCompare(a.createdAt||''));
+  }).sort(function(a, b) { return (b.createdAt||'').localeCompare(a.createdAt||''); });
 
-  const el = document.getElementById('qtGrid');
+  var el = document.getElementById('qtGrid');
   if (!list.length) {
     el.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📋</div><p>ยังไม่มีใบเสนอราคา</p></div>';
     return;
   }
-  const statusColor = { Draft:'#64748b', Active:'#0ea5e9', Confirmed:'#3b82f6', Closed:'#8b5cf6', default:'#94a3b8' };
-  el.innerHTML = list.map(q => {
-    const sc = statusColor[q.status] || statusColor.default;
-    return `
-    <div class="qt-card" onclick="viewQt('${q.id}')">
-      <div class="flex-between mb-10">
-        <span style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.5px;">${q.id}</span>
-        <span class="badge badge-${(q.status||'draft').toLowerCase()}">${q.status||'Draft'}</span>
-      </div>
-      <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px;">${q.customerName||'-'}</div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:14px;">📅 ${fmtDate(q.createdAt)}</div>
-      <div style="height:3px;background:var(--border2);border-radius:2px;margin-bottom:14px;">
-        <div style="height:100%;width:${q.status==='Closed'?'100':q.status==='Active'?'60':q.status==='Confirmed'?'40':'20'}%;background:${sc};border-radius:2px;transition:width .5s;"></div>
-      </div>
-      <div class="flex-between">
-        <span style="font-size:12px;color:var(--text3);">${Array.isArray(q.items)?q.items.length:0} รายการ</span>
-        <span class="qt-amount">${baht(q.total)}</span>
-      </div>
-    </div>`;
+  var statusColor = { Draft:'#64748b', Active:'#0ea5e9', Confirmed:'#3b82f6', Closed:'#8b5cf6' };
+  el.innerHTML = list.map(function(q) {
+    var sc  = statusColor[q.status] || '#94a3b8';
+    var pct = q.status==='Closed'?100 : q.status==='Active'?60 : q.status==='Confirmed'?40 : 20;
+    return '<div class="qt-card" onclick="viewQt(\'' + q.id + '\')">' +
+      '<div class="flex-between mb-10"><span style="font-size:11px;font-weight:600;color:var(--text3);">' + (q.id||'') + '</span>' +
+      '<span class="badge badge-' + (q.status||'draft').toLowerCase() + '">' + (q.status||'Draft') + '</span></div>' +
+      '<div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px;">' + (q.customerName||'-') + '</div>' +
+      '<div style="font-size:12px;color:var(--text3);margin-bottom:14px;">📅 ' + QuoteFlow.fmtDate(q.createdAt) + '</div>' +
+      '<div style="height:3px;background:var(--border2);border-radius:2px;margin-bottom:14px;"><div style="height:100%;width:' + pct + '%;background:' + sc + ';border-radius:2px;"></div></div>' +
+      '<div class="flex-between"><span style="font-size:12px;color:var(--text3);">' + (Array.isArray(q.items)?q.items.length:0) + ' รายการ</span>' +
+      '<span class="qt-amount">' + QuoteFlow.baht(q.total) + '</span></div></div>';
   }).join('');
 }
 
-/* ── View Modal ────────────────────────────────────────── */
+/* ── View ──────────────────────────────────────────────── */
 function viewQt(id) {
-  currentQt = quotations.find(q => q.id === id); if (!currentQt) return;
-  const q = currentQt;
-  const items = Array.isArray(q.items) ? q.items : [];
-  document.getElementById('viewContent').innerHTML = `
-    <div class="qt-report-header">
-      <div class="flex-between" style="flex-wrap:wrap;gap:12px;">
-        <div>
-          <div style="font-size:12px;opacity:.75;margin-bottom:4px;">ใบเสนอราคา / QUOTATION</div>
-          <div style="font-size:22px;font-weight:700;">${q.customerName||'-'}</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:18px;font-weight:700;">${q.id}</div>
-          <div style="font-size:12px;opacity:.75;margin-top:3px;">📅 ${fmtDate(q.createdAt)}</div>
-          <span class="badge badge-${(q.status||'draft').toLowerCase()}" style="margin-top:8px;">${q.status||'Draft'}</span>
-        </div>
-      </div>
-    </div>
-    <div class="table-wrap mb-16">
-      <table class="qt-report-table">
-        <thead><tr><th>#</th><th>รายการ</th><th>รูป</th><th style="text-align:center">จำนวน</th><th style="text-align:right">ราคา/หน่วย</th><th style="text-align:right">รวม</th></tr></thead>
-        <tbody>
-          ${items.length ? items.map((it,i) => `
-          <tr>
-            <td style="color:var(--text3);font-size:12px;">${i+1}</td>
-            <td style="font-weight:500;">${it.name||'-'}</td>
-            <td>${it.img && it.img.length>5 ? `<img src="${it.img}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--border);">` : '<span style="color:var(--text3);font-size:12px;">-</span>'}</td>
-            <td style="text-align:center;">${it.qty}</td>
-            <td style="text-align:right;">${baht(it.price)}</td>
-            <td style="text-align:right;font-weight:600;color:var(--blue);">${baht(it.qty*it.price)}</td>
-          </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px;">ไม่มีรายการ</td></tr>'}
-        </tbody>
-      </table>
-    </div>
-    <div style="display:flex;justify-content:flex-end;">
-      <div class="qt-report-sum" style="min-width:260px;">
-        <div class="total-row"><span class="text-sm text-muted">ยอดก่อนภาษี</span><span class="fw-bold">${baht(q.subtotal)}</span></div>
-        <div class="total-row"><span class="text-sm text-muted">ภาษีมูลค่าเพิ่ม 7%</span><span class="text-muted">${baht(q.vat)}</span></div>
-        <div class="total-final""><span>ยอดรวมทั้งสิ้น</span><span>${baht(q.total)}</span></div>
-      </div>
-    </div>
-    ${q.note ? `<div style="margin-top:16px;padding:10px 14px;background:var(--blue-pale);border-radius:8px;font-size:13px;color:var(--blue-dark);">📝 ${q.note}</div>` : ''}`;
+  currentQt = null;
+  for (var i = 0; i < quotations.length; i++) {
+    if (quotations[i].id === id) { currentQt = quotations[i]; break; }
+  }
+  if (!currentQt) return;
+  var q     = currentQt;
+  var items = Array.isArray(q.items) ? q.items : [];
 
-  document.getElementById('viewActions').innerHTML = `
-    <button class="btn btn-primary"  onclick="exportQuotationPDF(currentQt)">📄 Export PDF</button>
-    <button class="btn btn-outline"  onclick="shareQuotation(currentQt)">🔗 Share</button>
-    ${q.status!=='Active'&&q.status!=='Closed'?`<button class="btn btn-green" onclick="doActivate()">⚡ Activate Order</button>`:''}
-    <button class="btn btn-ghost"    onclick="doEdit()">✏️ แก้ไข</button>
-    <button class="btn btn-danger"   onclick="doDelete('${q.id}')">🗑️ ลบ</button>
-    <button class="btn btn-outline"  onclick="closeModal('viewModal')">ปิด</button>`;
-  openModal('viewModal');
+  document.getElementById('viewContent').innerHTML =
+    '<div class="qt-report-header">' +
+      '<div class="flex-between" style="flex-wrap:wrap;gap:12px;">' +
+        '<div><div style="font-size:12px;opacity:.75;margin-bottom:4px;">ใบเสนอราคา / QUOTATION</div>' +
+        '<div style="font-size:22px;font-weight:700;">' + (q.customerName||'-') + '</div></div>' +
+        '<div style="text-align:right;"><div style="font-size:18px;font-weight:700;">' + (q.id||'') + '</div>' +
+        '<div style="font-size:12px;opacity:.75;margin-top:3px;">📅 ' + QuoteFlow.fmtDate(q.createdAt) + '</div>' +
+        '<span class="badge badge-' + (q.status||'draft').toLowerCase() + '" style="margin-top:8px;">' + (q.status||'Draft') + '</span></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="table-wrap mb-16"><table>' +
+      '<thead><tr><th>#</th><th>รายการ</th><th>รูป</th><th style="text-align:center">จำนวน</th><th style="text-align:right">ราคา/หน่วย</th><th style="text-align:right">รวม</th></tr></thead>' +
+      '<tbody>' + (items.length ? items.map(function(it, i) {
+        return '<tr><td style="color:var(--text3);font-size:12px;">' + (i+1) + '</td>' +
+          '<td style="font-weight:500;">' + (it.name||'-') + '</td>' +
+          '<td>' + (it.img && it.img.length > 5 ? '<img src="' + it.img + '" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--border);">' : '-') + '</td>' +
+          '<td style="text-align:center;">' + it.qty + '</td>' +
+          '<td style="text-align:right;">' + QuoteFlow.baht(it.price) + '</td>' +
+          '<td style="text-align:right;font-weight:600;color:var(--blue);">' + QuoteFlow.baht(it.qty * it.price) + '</td></tr>';
+      }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px;">ไม่มีรายการ</td></tr>') +
+      '</tbody></table></div>' +
+    '<div style="display:flex;justify-content:flex-end;">' +
+      '<div style="background:linear-gradient(135deg,#f0f7ff,#e8f2ff);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 18px;min-width:260px;">' +
+        '<div class="total-row"><span class="text-sm text-muted">ยอดก่อนภาษี</span><span class="fw-bold">' + QuoteFlow.baht(q.subtotal) + '</span></div>' +
+        '<div class="total-row"><span class="text-sm text-muted">ภาษีมูลค่าเพิ่ม 7%</span><span class="text-muted">' + QuoteFlow.baht(q.vat) + '</span></div>' +
+        '<div class="total-final"><span>ยอดรวมทั้งสิ้น</span><span>' + QuoteFlow.baht(q.total) + '</span></div>' +
+      '</div></div>' +
+    (q.note ? '<div style="margin-top:16px;padding:10px 14px;background:var(--blue-pale);border-radius:8px;font-size:13px;color:var(--blue-dark);">📝 ' + q.note + '</div>' : '');
+
+  document.getElementById('viewActions').innerHTML =
+    '<button class="btn btn-primary" onclick="QuoteFlow.exportQuotationPDF(currentQt)">📄 Export PDF</button>' +
+    '<button class="btn btn-outline" onclick="QuoteFlow.shareQuotation(currentQt)">🔗 Share</button>' +
+    (q.status !== 'Active' && q.status !== 'Closed' ? '<button class="btn btn-green" onclick="doActivate()">⚡ Activate Order</button>' : '') +
+    '<button class="btn btn-ghost" onclick="doEdit()">✏️ แก้ไข</button>' +
+    '<button class="btn btn-danger" onclick="doDelete(\'' + q.id + '\')">🗑️ ลบ</button>' +
+    '<button class="btn btn-outline" onclick="QuoteFlow.closeModal(\'viewModal\')">ปิด</button>';
+
+  QuoteFlow.openModal('viewModal');
 }
 
-async function doActivate() {
-  if (!confirm(`Activate ใบ ${currentQt.id}?`)) return;
-  const res = await api('activateOrder', { quotationId: currentQt.id, customerName: currentQt.customerName, total: currentQt.total });
-  if (res.success) { toast('Activate สำเร็จ! ✅', 'success'); closeModal('viewModal'); loadQuotations(); }
+function doActivate() {
+  if (!currentQt) return;
+  if (!confirm('Activate ใบ ' + currentQt.id + '?')) return;
+  QuoteFlow.api('activateOrder', { quotationId: currentQt.id, customerName: currentQt.customerName, total: currentQt.total }).then(function(res) {
+    if (res.success) { QuoteFlow.toast('Activate สำเร็จ! ✅', 'success'); QuoteFlow.closeModal('viewModal'); loadQuotations(); }
+  });
 }
+
 function doEdit() {
-  closeModal('viewModal'); resetForm();
-  document.getElementById('editId').value = currentQt.id;
+  QuoteFlow.closeModal('viewModal');
+  resetForm();
+  document.getElementById('editId').value       = currentQt.id;
   document.getElementById('customerName').value = currentQt.customerName || '';
-  document.getElementById('qtNote').value = currentQt.note || '';
+  document.getElementById('qtNote').value       = currentQt.note || '';
   document.getElementById('modalTitle').textContent = '✏️ แก้ไขใบเสนอราคา';
-  (Array.isArray(currentQt.items) ? currentQt.items : []).forEach(i => addItemRow(i));
+  var items = Array.isArray(currentQt.items) ? currentQt.items : [];
+  items.forEach(function(i) { addItemRow(i); });
   if (currentQt.vat > 0) document.getElementById('vatCheck').checked = true;
-  recalc(); openModal('qtModal');
-}
-async function doDelete(id) {
-  if (!confirm('ยืนยันการลบใบเสนอราคา?')) return;
-  const res = await api('deleteQuotation', { id });
-  if (res.success) { toast('ลบสำเร็จ', 'warn'); closeModal('viewModal'); loadQuotations(); }
+  recalc();
+  QuoteFlow.openModal('qtModal');
 }
 
-/* ── Event wiring ──────────────────────────────────────── */
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+function doDelete(id) {
+  if (!confirm('ยืนยันการลบใบเสนอราคา?')) return;
+  QuoteFlow.api('deleteQuotation', { id: id }).then(function(res) {
+    if (res.success) { QuoteFlow.toast('ลบสำเร็จ', 'warn'); QuoteFlow.closeModal('viewModal'); loadQuotations(); }
+  });
+}
+
+/* ── Events ────────────────────────────────────────────── */
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
     filterStatus = btn.dataset.filter;
     renderGrid();
@@ -471,8 +433,10 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 document.getElementById('searchInput').addEventListener('input', renderGrid);
 
-resetForm(); addItemRow(); loadQuotations();
+/* ── Init ──────────────────────────────────────────────── */
+resetForm();
+addItemRow();
+loadQuotations();
 </script>
 </body>
 </html>
-
