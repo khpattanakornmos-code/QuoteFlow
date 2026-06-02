@@ -167,12 +167,11 @@
 <script src="assets/app.js"></script>
 <script src="assets/nav.js"></script>
 <script>
-const { api, requireAuth, baht, fmtDate } = QuoteFlow;
-requireAuth();
+QuoteFlow.requireAuth();
 injectSidebar('dashboard');
 
 async function loadDashboard() {
-  const res = await api('getDashboard');
+  const res = await QuoteFlow.api('getDashboard');
   if (!res.success) return;
   const d = res.data;
 
@@ -180,22 +179,22 @@ async function loadDashboard() {
   document.getElementById('s-activeCount').textContent= d.activeCount ?? '--';
   document.getElementById('s-closedCount').textContent= d.closedCount ?? '--';
   document.getElementById('s-draftCount').textContent = d.draftCount ?? '--';
-  document.getElementById('s-income').textContent     = baht(d.totalIncome);
-  document.getElementById('s-expense').textContent    = baht(d.totalExpense);
+  document.getElementById('s-income').textContent     = QuoteFlow.baht(d.totalIncome);
+  document.getElementById('s-expense').textContent    = QuoteFlow.baht(d.totalExpense);
 
   const profit = d.netProfit;
   const profEl = document.getElementById('s-profit');
-  profEl.textContent = baht(profit);
+  profEl.textContent = QuoteFlow.baht(profit);
   profEl.className = 'stat-value ' + (profit >= 0 ? 'text-green' : 'text-red');
 
-  document.getElementById('s-receivable').textContent = baht(d.totalReceivable);
-  document.getElementById('s-payroll').textContent    = baht(d.totalPayroll);
+  document.getElementById('s-receivable').textContent = QuoteFlow.baht(d.totalReceivable);
+  document.getElementById('s-payroll').textContent    = QuoteFlow.baht(d.totalPayroll);
 
   // Finance mini
-  document.getElementById('fc-income').textContent  = baht(d.totalIncome);
-  document.getElementById('fc-expense').textContent = baht(d.totalExpense);
+  document.getElementById('fc-income').textContent  = QuoteFlow.baht(d.totalIncome);
+  document.getElementById('fc-expense').textContent = QuoteFlow.baht(d.totalExpense);
   const fp = document.getElementById('fc-profit');
-  fp.textContent = baht(d.netProfit);
+  fp.textContent = QuoteFlow.baht(d.netProfit);
   fp.className = 'fw-bold ' + (d.netProfit >= 0 ? 'text-green' : 'text-red');
 
   const maxFin = Math.max(d.totalIncome, d.totalExpense, 1);
@@ -213,10 +212,10 @@ async function loadDashboard() {
       <a href="quotation.html" class="mini-row" style="text-decoration:none;">
         <div>
           <div class="text-sm fw-bold">${q.customerName || '-'}</div>
-          <div class="text-xs text-muted">${q.id} · ${fmtDate(q.createdAt)}</div>
+          <div class="text-xs text-muted">${q.id} · ${QuoteFlow.fmtDate(q.createdAt)}</div>
         </div>
         <div class="flex-center gap-8">
-          <span class="fw-bold text-blue">${baht(q.total)}</span>
+          <span class="fw-bold text-blue">${QuoteFlow.baht(q.total)}</span>
           <span class="badge badge-${(q.status||'draft').toLowerCase()}">${q.status}</span>
         </div>
       </a>`).join('');
