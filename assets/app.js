@@ -5,7 +5,7 @@
 
 const CONFIG = {
   // 🔴 ใส่ Web App URL จาก Apps Script ของคุณ
-  API_URL: 'https://script.google.com/macros/s/AKfycbyrB1qzFPIRvC_euPoD5SkocSN-8doigVXzVp9Em0BHGRctt2b5fWQHNlmSFbPuISCf/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycbz-Ji_OC_2DLLYZ7K15kN13wAwe8KgVRYgFnvjgaBjg3AZAp5WXx8JznDF9IFqoeDEk/exec',
   // 🔴 ใส่ Google Client ID ของคุณ
   GOOGLE_CLIENT_ID: '637690103992-85cf7gvvu6a57bbrnbga826oh0t4bvvi.apps.googleusercontent.com',
 };
