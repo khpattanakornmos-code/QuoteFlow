@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>รายรับ-รายจ่าย – QuoteFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+/* Type toggle */
+.type-toggle { display:flex; border:1.5px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; background:var(--card-alt); margin-bottom:20px; }
+.type-btn {
+  flex:1; padding:11px; text-align:center; font-size:14px; font-weight:600;
+  cursor:pointer; background:none; color:var(--text2); transition:all var(--t);
+  border:none; font-family:var(--font); display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.type-btn.income.active  { background:linear-gradient(135deg,#d1fae5,#a7f3d0); color:#065f46; }
+.type-btn.expense.active { background:linear-gradient(135deg,#fee2e2,#fecaca); color:#991b1b; }
+
+/* Transaction rows */
+.tx-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 16px; border-radius:10px;
+  background:var(--card-alt); border:1px solid var(--border2);
+  transition:all var(--t); gap:12px;
+}
+.tx-row:hover { background:var(--blue-pale); border-color:var(--border); }
+.tx-icon {
+  width:36px; height:36px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center; font-size:16px;
+  flex-shrink:0;
+}
+.tx-income  { background:#d1fae5; }
+.tx-expense { background:#fee2e2; }
+
+/* Category pills */
+.cat-wrap { display:flex; flex-wrap:wrap; gap:6px; }
+.cat-pill {
+  padding:5px 14px; border-radius:16px; font-size:12px; font-weight:500;
+  border:1.5px solid var(--border); background:#fff; color:var(--text2);
+  cursor:pointer; transition:all var(--t); font-family:var(--font);
+}
+.cat-pill:hover   { border-color:var(--blue); color:var(--blue); }
+.cat-pill.active  { background:var(--blue-grad); color:#fff; border-color:transparent; }
+
+/* Month nav */
+.month-nav { display:flex; align-items:center; gap:10px; }
+.month-nav button {
+  width:32px; height:32px; border-radius:50%;
+  background:var(--blue-pale); border:1.5px solid var(--border);
+  color:var(--blue); font-size:16px; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:all var(--t);
+}
+.month-nav button:hover { background:var(--blue); color:#fff; }
+.month-label { font-size:15px; font-weight:600; color:var(--text); min-width:140px; text-align:center; }
+
+/* Balance pill */
+.balance-chip {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 16px; border-radius:20px; font-size:13px; font-weight:600;
+}
+.bal-pos { background:#d1fae5; color:#065f46; }
+.bal-neg { background:#fee2e2; color:#991b1b; }
+
+/* Chart bars */
+.mini-chart { display:flex; align-items:flex-end; gap:4px; height:64px; }
+.mc-bar { flex:1; border-radius:3px 3px 0 0; min-width:8px; transition:height .4s; }
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div id="nav-root"></div>
+  <div class="main-content">
+
+    <div class="topbar">
+      <div class="flex-center gap-12">
+        <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+        <div class="page-title">💰 รายรับ-รายจ่าย</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-outline btn-sm" onclick="loadFinance()">🔄</button>
+        <button class="btn btn-primary" onclick="QuoteFlow.openModal('finModal')">+ บันทึกรายการ</button>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Month navigator -->
+      <div class="card mb-20" style="padding:16px 20px;">
+        <div class="flex-between" style="flex-wrap:wrap;gap:12px;">
+          <div class="month-nav">
+            <button onclick="changeMonth(-1)">‹</button>
+            <span class="month-label" id="monthLabel">กำลังโหลด...</span>
+            <button onclick="changeMonth(1)">›</button>
+          </div>
+          <div class="flex-center gap-10">
+            <span class="balance-chip" id="balChip">฿0.00</span>
+            <button class="btn btn-ghost btn-sm" onclick="loadFinance()">โหลดข้อมูล</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI row -->
+      <div class="grid grid-3 mb-24">
+        <div class="card stat-card green">
+          <div class="stat-icon">💚</div>
+          <div class="stat-value text-white" id="sum-income">฿0.00</div>
+          <div class="stat-label">รายรับเดือนนี้</div>
+        </div>
+        <div class="card stat-card red">
+          <div class="stat-icon">❤️</div>
+          <div class="stat-value text-white" id="sum-expense">฿0.00</div>
+          <div class="stat-label">รายจ่ายเดือนนี้</div>
+        </div>
+        <div class="card stat-card blue" id="profitCard">
+          <div class="stat-icon">📈</div>
+          <div class="stat-value" id="sum-profit">฿0.00</div>
+          <div class="stat-label">กำไรสุทธิ</div>
+        </div>
+      </div>
+
+      <!-- Main content 2-col -->
+      <div class="grid grid-2">
+
+        <!-- Transaction list -->
+        <div class="card" style="grid-column:1/-1">
+          <div class="flex-between mb-16">
+            <div class="card-title" style="margin:0;">รายการทั้งหมด</div>
+            <div class="cat-wrap" id="catFilter">
+              <button class="cat-pill active" data-cat="all">ทั้งหมด</button>
+              <button class="cat-pill" data-cat="income">💚 รายรับ</button>
+              <button class="cat-pill" data-cat="expense">❤️ รายจ่าย</button>
+            </div>
+          </div>
+          <div id="txList" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ADD MODAL ═════════════════════════════════════════ -->
+<div class="modal-overlay" id="finModal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <div class="modal-title">💰 บันทึกรายการ</div>
+      <button class="modal-close" onclick="QuoteFlow.closeModal('finModal')">✕</button>
+    </div>
+
+    <div class="type-toggle">
+      <button class="type-btn income active" id="typeIncome"  onclick="setType('income')">💚 รายรับ</button>
+      <button class="type-btn expense"       id="typeExpense" onclick="setType('expense')">❤️ รายจ่าย</button>
+    </div>
+
+    <div class="form-group mb-14">
+      <label class="form-label">หมวดหมู่</label>
+      <select class="form-input" id="finCategory" onchange="updateCats()">
+        <optgroup label="รายรับ">
+          <option value="ค่าบริการ">ค่าบริการ</option>
+          <option value="ขายสินค้า">ขายสินค้า</option>
+          <option value="รายได้อื่นๆ">รายได้อื่นๆ</option>
+        </optgroup>
+        <optgroup label="รายจ่าย">
+          <option value="ค่าวัสดุ">ค่าวัสดุ</option>
+          <option value="ค่าแรง">ค่าแรง</option>
+          <option value="ค่าเช่า">ค่าเช่า</option>
+          <option value="ค่าสาธารณูปโภค">ค่าสาธารณูปโภค</option>
+          <option value="ค่าขนส่ง">ค่าขนส่ง</option>
+          <option value="ค่าใช้จ่ายอื่นๆ">ค่าใช้จ่ายอื่นๆ</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="form-group mb-14">
+      <label class="form-label">จำนวนเงิน (บาท)</label>
+      <input type="number" class="form-input" id="finAmount" placeholder="0.00" min="0" step="0.01" style="font-size:18px;font-weight:600;">
+    </div>
+
+    <div class="form-group mb-20">
+      <label class="form-label">รายละเอียด</label>
+      <input class="form-input" id="finDesc" placeholder="รายละเอียดเพิ่มเติม...">
+    </div>
+
+    <div class="flex-center gap-10" style="justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="QuoteFlow.closeModal('finModal')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveFin()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script src="assets/nav.js"></script>
+<script>
+const { api, requireAuth, baht, fmtDate, toast, openModal, closeModal } = QuoteFlow;
+requireAuth();
+injectSidebar('finance');
+
+let finType  = 'income';
+let finData  = [];
+let catView  = 'all';
+const now    = new Date();
+let viewMonth = now.getMonth() + 1;
+let viewYear  = now.getFullYear();
+
+const MONTH_TH = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+function setType(t) {
+  finType = t;
+  document.getElementById('typeIncome').className  = 'type-btn income'  + (t==='income'?' active':'');
+  document.getElementById('typeExpense').className = 'type-btn expense' + (t==='expense'?' active':'');
+}
+
+function changeMonth(delta) {
+  viewMonth += delta;
+  if (viewMonth > 12) { viewMonth = 1;  viewYear++; }
+  if (viewMonth < 1)  { viewMonth = 12; viewYear--; }
+  loadFinance();
+}
+
+function updateMonthLabel() {
+  document.getElementById('monthLabel').textContent = `${MONTH_TH[viewMonth]} ${viewYear + 543}`;
+}
+
+async function saveFin() {
+  const amount = Number(document.getElementById('finAmount').value);
+  if (!amount || amount <= 0) return toast('กรุณาใส่จำนวนเงิน', 'error');
+  const res = await api('addFinance', {
+    type: finType,
+    category: document.getElementById('finCategory').value,
+    amount,
+    description: document.getElementById('finDesc').value.trim()
+  });
+  if (res.success) {
+    toast('บันทึกสำเร็จ! 🎉', 'success');
+    closeModal('finModal');
+    document.getElementById('finAmount').value = '';
+    document.getElementById('finDesc').value   = '';
+    loadFinance();
+  }
+}
+
+async function loadFinance() {
+  updateMonthLabel();
+  const res = await api('getFinance', { month: viewMonth, year: viewYear });
+  if (!res.success) return;
+  finData = res.data;
+
+  const income  = finData.filter(r => r.type==='income').reduce((s,r) => s+Number(r.amount), 0);
+  const expense = finData.filter(r => r.type==='expense').reduce((s,r) => s+Number(r.amount), 0);
+  const profit  = income - expense;
+
+  document.getElementById('sum-income').textContent  = baht(income);
+  document.getElementById('sum-expense').textContent = baht(expense);
+  document.getElementById('sum-profit').textContent  = baht(profit);
+
+  const balChip = document.getElementById('balChip');
+  balChip.textContent = (profit >= 0 ? '▲ กำไร ' : '▼ ขาดทุน ') + baht(Math.abs(profit));
+  balChip.className   = 'balance-chip ' + (profit >= 0 ? 'bal-pos' : 'bal-neg');
+
+  const pc = document.getElementById('profitCard');
+  pc.className = 'card stat-card ' + (profit >= 0 ? 'green' : 'red');
+
+  renderTxList();
+}
+
+function renderTxList() {
+  let list = finData;
+  if (catView === 'income')  list = list.filter(r => r.type==='income');
+  if (catView === 'expense') list = list.filter(r => r.type==='expense');
+  list = list.sort((a, b) => (b.date||'').localeCompare(a.date||''));
+
+  const el = document.getElementById('txList');
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">💰</div><p>ยังไม่มีรายการในเดือนนี้</p></div>';
+    return;
+  }
+  el.innerHTML = list.map(r => `
+    <div class="tx-row">
+      <div class="tx-icon ${r.type==='income'?'tx-income':'tx-expense'}">${r.type==='income'?'💚':'❤️'}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:13.5px;color:var(--text);">${r.category||'-'}</div>
+        <div style="font-size:12px;color:var(--text3);">${r.description||'–'} &nbsp;·&nbsp; ${fmtDate(r.date)}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:15px;font-weight:700;color:${r.type==='income'?'var(--green)':'var(--red)'};">
+          ${r.type==='income'?'+':'-'}${baht(r.amount)}
+        </div>
+        <span class="badge ${r.type==='income'?'badge-active':'badge-unpaid'}" style="font-size:10px;">${r.type==='income'?'รายรับ':'รายจ่าย'}</span>
+      </div>
+      <button class="btn btn-danger btn-icon btn-sm" style="margin-left:8px;flex-shrink:0;" onclick="delFin('${r.id}')">🗑️</button>
+    </div>`).join('');
+}
+
+async function delFin(id) {
+  if (!confirm('ลบรายการนี้?')) return;
+  const res = await api('deleteFinance', { id });
+  if (res.success) { toast('ลบแล้ว', 'warn'); loadFinance(); }
+}
+
+// Category filter
+document.getElementById('catFilter').addEventListener('click', e => {
+  const pill = e.target.closest('.cat-pill');
+  if (!pill) return;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  catView = pill.dataset.cat;
+  renderTxList();
+});
+
+loadFinance();
+</script>
+</body>
+</html>
