@@ -90,6 +90,16 @@
         <div class="form-group"><label class="form-label">👤 ชื่อลูกค้า *</label><input class="form-input" id="customerName" placeholder="ชื่อบริษัท / ชื่อลูกค้า"></div>
         <div class="form-group"><label class="form-label">📍 ที่อยู่ / เงื่อนไขชำระ</label><input class="form-input" id="qtNote" placeholder="ที่อยู่ หรือ เงื่อนไขการชำระเงิน"></div>
       </div>
+      <div class="form-row form-row-3 mt-12">
+        <div class="form-group">
+          <label class="form-label">% มัดจำ</label>
+          <input type="number" class="form-input" id="qtDepositPct" min="0" max="100" step="0.01" value="40" placeholder="40">
+        </div>
+        <div class="form-group">
+          <label class="form-label">หน่วยขนาดสินค้า</label>
+          <div class="text-sm text-muted" style="padding:10px 0;">กรอก กว้าง / ยาว / สูง เป็นตัวเลข เลือก CM หรือ M ต่อรายการ</div>
+        </div>
+      </div>
     </div>
     <div class="flex-between mb-12">
       <div class="card-title" style="margin:0">🛒 รายการสินค้า</div>
@@ -279,7 +289,7 @@ function saveQuotation(status){
   // ✅ เก็บ images ไว้ใน localStorage แยกต่างหาก
   var imgStore={};
   items.forEach(function(it,idx){if(it.img&&it.img.length>500)imgStore[idx]=it.img;});
-  var data={id:qtId,customerName:cn,note:document.getElementById('qtNote').value.trim(),items:items,subtotal:sub,vat:vat,total:sub+vat,status:status};
+  var data={id:qtId,customerName:cn,note:document.getElementById('qtNote').value.trim(),items:items,subtotal:sub,vat:vat,total:sub+vat,depositPct:Number(document.getElementById('qtDepositPct').value)||40,status:status};
   _saving=true;
   document.getElementById('savingOverlay').classList.add('show');
   document.getElementById('btnDraft').disabled=true;
@@ -307,6 +317,7 @@ function openCreate(){resetForm();addItemRow();QuoteFlow.openModal('qtModal');}
 function resetForm(){
   document.getElementById('editId').value='';document.getElementById('customerName').value='';
   document.getElementById('qtNote').value='';document.getElementById('vatCheck').checked=false;
+  document.getElementById('qtDepositPct').value='40';
   document.getElementById('itemsList').innerHTML='';
   document.getElementById('modalTitle').textContent='📋 สร้างใบเสนอราคาใหม่';
   itemCount=0;recalc();
@@ -364,6 +375,7 @@ function viewQt(id){
     '<div style="display:flex;justify-content:flex-end;"><div style="background:linear-gradient(135deg,#f0f7ff,#e8f2ff);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 18px;min-width:260px;">'+
     '<div class="total-row"><span class="text-sm text-muted">ยอดก่อนภาษี</span><span class="fw-bold">'+QuoteFlow.baht(q.subtotal)+'</span></div>'+
     '<div class="total-row"><span class="text-sm text-muted">ภาษีมูลค่าเพิ่ม 7%</span><span class="text-muted">'+QuoteFlow.baht(q.vat)+'</span></div>'+
+    '<div class="total-row"><span class="text-sm text-muted">% มัดจำ</span><span class="text-muted">'+(q.depositPct||40)+'%</span></div>'+
     '<div class="total-final"><span>ยอดรวมทั้งสิ้น</span><span>'+QuoteFlow.baht(q.total)+'</span></div></div></div>'+
     (q.note?'<div style="margin-top:16px;padding:10px 14px;background:var(--blue-pale);border-radius:8px;font-size:13px;color:var(--blue-dark);">📝 '+q.note+'</div>':'');
 
@@ -409,6 +421,7 @@ function doEdit(){
   document.getElementById('editId').value=currentQt.id;
   document.getElementById('customerName').value=currentQt.customerName||'';
   document.getElementById('qtNote').value=currentQt.note||'';
+  document.getElementById('qtDepositPct').value=currentQt.depositPct||40;
   document.getElementById('modalTitle').textContent='✏️ แก้ไขใบเสนอราคา';
   (Array.isArray(currentQt.items)?currentQt.items:[]).forEach(function(i){addItemRow(i);});
   if(currentQt.vat>0)document.getElementById('vatCheck').checked=true;

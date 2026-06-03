@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Report – QuoteFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.report-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.report-filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.report-filters .form-input{min-width:130px;}
+.report-table td,.report-table th{font-size:13px;}
+.type-income{color:var(--green);font-weight:700;}
+.type-expense{color:var(--red);font-weight:700;}
+.report-note{font-size:12px;color:var(--text3);}
+@media(max-width:640px){.report-filters{width:100%;}.report-filters .form-input,.report-filters .btn{flex:1;min-width:120px;}}
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div id="nav-root"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="flex-center gap-12">
+        <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+        <div class="page-title">📑 Report</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-outline btn-sm" onclick="loadReport()">🔄 โหลดใหม่</button>
+        <button class="btn btn-primary" onclick="exportReportPDF()">📄 Export PDF</button>
+      </div>
+    </div>
+    <div class="page-body">
+      <div class="card mb-20">
+        <div class="report-toolbar">
+          <div>
+            <div class="card-title" style="margin:0">รายงานรายรับ / รายจ่าย</div>
+            <div class="report-note" id="reportSubtitle">-</div>
+          </div>
+          <div class="report-filters">
+            <select class="form-input" id="monthSelect"></select>
+            <input type="number" class="form-input" id="yearInput" min="2000" max="2100">
+            <button class="btn btn-ghost" onclick="loadReport()">ดูรายงาน</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-4 mb-24">
+        <div class="card stat-card green"><div class="stat-icon">💚</div><div class="stat-value" id="rpIncome">฿0.00</div><div class="stat-label">รายรับ</div></div>
+        <div class="card stat-card red"><div class="stat-icon">❤️</div><div class="stat-value" id="rpExpense">฿0.00</div><div class="stat-label">รายจ่ายรวมค่าแรง</div></div>
+        <div class="card stat-card blue" id="profitCard"><div class="stat-icon">📈</div><div class="stat-value" id="rpProfit">฿0.00</div><div class="stat-label">กำไรสุทธิ</div></div>
+        <div class="card stat-card amber"><div class="stat-icon">📌</div><div class="stat-value" id="rpReceivable">฿0.00</div><div class="stat-label">ยอดค้างชำระรวม</div></div>
+      </div>
+
+      <div class="card">
+        <div class="flex-between mb-16" style="flex-wrap:wrap;gap:10px;">
+          <div class="card-title" style="margin:0">รายการทั้งหมด</div>
+          <div class="report-note">ค่าแรงจากหน้า Payroll ถูกนับเป็นรายจ่ายในรายงานนี้</div>
+        </div>
+        <div class="table-wrap">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>วันที่</th><th>ประเภท</th><th>หมวดหมู่</th><th>รายละเอียด</th><th style="text-align:right">จำนวนเงิน</th>
+              </tr>
+            </thead>
+            <tbody id="reportRows">
+              <tr><td colspan="5" style="text-align:center;color:var(--text3);padding:28px;">ยังไม่มีข้อมูล</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="assets/app.js"></script>
+<script src="assets/nav.js"></script>
+<script>
+QuoteFlow.requireAuth();
+injectSidebar('report');
+
+var reportData=null;
+var MONTHS=['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+function initFilters(){
+  var now=new Date();
+  document.getElementById('monthSelect').innerHTML=MONTHS.slice(1).map(function(m,i){
+    var month=i+1;
+    return '<option value="'+month+'">'+m+'</option>';
+  }).join('');
+  document.getElementById('monthSelect').value=now.getMonth()+1;
+  document.getElementById('yearInput').value=now.getFullYear();
+}
+
+function loadReport(){
+  var month=Number(document.getElementById('monthSelect').value);
+  var year=Number(document.getElementById('yearInput').value);
+  document.getElementById('reportRows').innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:28px;">กำลังโหลด...</td></tr>';
+  QuoteFlow.api('getReport',{month:month,year:year}).then(function(res){
+    if(!res.success){
+      QuoteFlow.toast('โหลดรายงานไม่ได้','error');
+      return;
+    }
+    reportData=res.data||{};
+    renderReport(reportData);
+  });
+}
+
+function renderReport(d){
+  var title=(MONTHS[d.month]||'-')+' '+(Number(d.year)+543);
+  document.getElementById('reportSubtitle').textContent=title;
+  document.getElementById('rpIncome').textContent=QuoteFlow.baht(d.income);
+  document.getElementById('rpExpense').textContent=QuoteFlow.baht(d.expense);
+  document.getElementById('rpProfit').textContent=QuoteFlow.baht(d.profit);
+  document.getElementById('profitCard').className='card stat-card '+(Number(d.profit)>=0?'blue':'red');
+  document.getElementById('rpReceivable').textContent=QuoteFlow.baht(d.receivableBalance);
+  var rows=Array.isArray(d.transactions)?d.transactions:[];
+  if(!rows.length){
+    document.getElementById('reportRows').innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:28px;">ไม่มีรายการในเดือนนี้</td></tr>';
+    return;
+  }
+  document.getElementById('reportRows').innerHTML=rows.map(function(r){
+    var isIncome=r.type==='income';
+    return '<tr>'+
+      '<td>'+QuoteFlow.fmtDate(r.date||r.createdAt)+'</td>'+
+      '<td><span class="'+(isIncome?'type-income':'type-expense')+'">'+(isIncome?'รายรับ':'รายจ่าย')+'</span></td>'+
+      '<td>'+(r.category||'-')+'</td>'+
+      '<td>'+(r.description||'-')+(r.source?'<div class="text-xs text-muted">'+r.source+(r.status?' · '+r.status:'')+'</div>':'')+'</td>'+
+      '<td style="text-align:right;font-weight:700;" class="'+(isIncome?'text-green':'text-red')+'">'+(isIncome?'+':'-')+QuoteFlow.baht(r.amount)+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+function exportReportPDF(){
+  if(!reportData){QuoteFlow.toast('กรุณาโหลดรายงานก่อน','warn');return;}
+  var title='รายงาน '+(MONTHS[reportData.month]||'-')+' '+(Number(reportData.year)+543);
+  var rows=Array.isArray(reportData.transactions)?reportData.transactions:[];
+  var bodyRows=rows.length?rows.map(function(r){
+    var isIncome=r.type==='income';
+    return '<tr><td>'+QuoteFlow.fmtDate(r.date||r.createdAt)+'</td><td>'+(isIncome?'รายรับ':'รายจ่าย')+'</td><td>'+(r.category||'-')+'</td><td>'+(r.description||'-')+'</td><td style="text-align:right;color:'+(isIncome?'#065f46':'#991b1b')+';">'+(isIncome?'+':'-')+QuoteFlow.baht(r.amount)+'</td></tr>';
+  }).join(''):'<tr><td colspan="5" style="text-align:center;color:#777;padding:20px;">ไม่มีรายการ</td></tr>';
+  var html='<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><title>'+title+'</title>'+
+    '<style>@import url("https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap");*{box-sizing:border-box}body{font-family:Prompt,sans-serif;color:#1e3a5f;padding:24px;}h1{font-size:22px;margin:0 0 6px;}table{width:100%;border-collapse:collapse;font-size:12px;margin-top:18px;}th{background:#e8f2ff;text-align:left;padding:9px;border-bottom:1px solid #d4e2f4;}td{padding:9px;border-bottom:1px solid #e8f0fb;vertical-align:top}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}.box{border:1px solid #d4e2f4;border-radius:8px;padding:12px}.label{font-size:11px;color:#4a6fa5}.value{font-size:17px;font-weight:700;margin-top:4px}@media print{@page{size:A4;margin:12mm}body{padding:0}}</style></head><body>'+
+    '<h1>'+title+'</h1><div style="font-size:12px;color:#4a6fa5;">QuoteFlow Business Suite</div>'+
+    '<div class="summary"><div class="box"><div class="label">รายรับ</div><div class="value" style="color:#065f46">'+QuoteFlow.baht(reportData.income)+'</div></div><div class="box"><div class="label">รายจ่าย</div><div class="value" style="color:#991b1b">'+QuoteFlow.baht(reportData.expense)+'</div></div><div class="box"><div class="label">กำไรสุทธิ</div><div class="value">'+QuoteFlow.baht(reportData.profit)+'</div></div><div class="box"><div class="label">ยอดค้างชำระรวม</div><div class="value">'+QuoteFlow.baht(reportData.receivableBalance)+'</div></div></div>'+
+    '<table><thead><tr><th>วันที่</th><th>ประเภท</th><th>หมวดหมู่</th><th>รายละเอียด</th><th style="text-align:right">จำนวนเงิน</th></tr></thead><tbody>'+bodyRows+'</tbody></table>'+
+    '</body></html>';
+  var win=window.open('', '_blank', 'width=980,height=780');
+  if(!win){QuoteFlow.toast('กรุณาอนุญาต Popup ก่อน Export','warn');return;}
+  win.document.open();win.document.write(html);win.document.close();
+  win.onload=function(){setTimeout(function(){win.focus();win.print();},500);};
+}
+
+initFilters();
+loadReport();
+</script>
+</body>
+</html>

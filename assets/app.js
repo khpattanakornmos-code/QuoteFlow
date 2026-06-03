@@ -11,7 +11,7 @@ var CONFIG = {
 
 var READ_ACTIONS = [
   'ping','login','getQuotations','getActiveOrders',
-  'getFinance','getPayroll','getReceivables','getDashboard',
+  'getFinance','getPayroll','getReceivables','getDashboard','getReport',
 ];
 var READ_CACHE_TTL = 20000;
 var _readCache = {};
@@ -189,11 +189,15 @@ var COMPANY = {
 };
 
 // ── คำนวณมัดจำอัตโนมัติ ──────────────────────────────────
-function calcDeposits(total) {
-  var d1 = Math.round(total * COMPANY.deposit1Pct / 100);
-  var d2 = Math.round(total * COMPANY.deposit2Pct / 100);
+function calcDeposits(total, depositPct) {
+  var p1 = Number(depositPct);
+  if(!isFinite(p1)||p1<0)p1=COMPANY.deposit1Pct;
+  p1=Math.min(100,p1);
+  var d1 = Math.round(total * p1 / 100);
+  var remain = Math.max(0,total-d1);
+  var d2 = Math.round(remain / 2);
   var d3 = total - d1 - d2;
-  return { d1:d1, d2:d2, d3:d3 };
+  return { d1:d1, d2:d2, d3:d3, p1:p1 };
 }
 
 // ── PDF — ทองพิมพ์เฟอร์นิเจอร์ ─────────────────────────
@@ -202,7 +206,7 @@ function exportQuotationPDF(qt) {
   var C     = COMPANY;
   var items = Array.isArray(qt.items) ? qt.items : [];
   var total = Number(qt.total) || 0;
-  var dep   = calcDeposits(total);
+  var dep   = calcDeposits(total, qt.depositPct);
   var P = C.colorPrimary, A = C.colorAccent, L = C.colorLight, B = C.colorBorder;
   var PCA = '-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;';
 
@@ -250,9 +254,9 @@ function exportQuotationPDF(qt) {
   var termsHTML =
     '<li>' + C.termsExtra.replace(/\n/g, '</li><li>') + '</li>' +
     '<li>แบ่งชำระ 3 งวด<ul style="margin:6px 0 0 20px;">' +
-      '<li>งวดที่ 1 มัดจำ ' + C.deposit1Pct + '% = <b>' + dep.d1.toLocaleString('th-TH') + ' บาท</b></li>' +
-      '<li>งวดที่ 2 ตรวจเช็คงานก่อนทำสีชำระ ' + C.deposit2Pct + '% = <b>' + dep.d2.toLocaleString('th-TH') + ' บาท</b></li>' +
-      '<li>งวดที่ 3 ตรวจเช็คงานก่อนแพ็คก่อนส่งขึ้นรถชำระส่วนที่เหลือ ' + C.deposit3Pct + '% = <b>' + dep.d3.toLocaleString('th-TH') + ' บาท</b></li>' +
+      '<li>งวดที่ 1 มัดจำ ' + dep.p1 + '% = <b>' + dep.d1.toLocaleString('th-TH') + ' บาท</b></li>' +
+      '<li>งวดที่ 2 ตรวจเช็คงานก่อนทำสีชำระ = <b>' + dep.d2.toLocaleString('th-TH') + ' บาท</b></li>' +
+      '<li>งวดที่ 3 ตรวจเช็คงานก่อนแพ็คก่อนส่งขึ้นรถชำระส่วนที่เหลือ = <b>' + dep.d3.toLocaleString('th-TH') + ' บาท</b></li>' +
     '</ul></li>' +
     '<li>กำหนดส่ง ' + C.deliveryDays + ' วัน หลังจากวันที่มัดจำ</li>';
 

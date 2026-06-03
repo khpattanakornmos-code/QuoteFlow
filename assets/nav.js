@@ -13,6 +13,7 @@ function injectSidebar(activePage) {
     {label:'การเงิน',items:[
       {page:'finance',   href:'finance.html',   icon:'💰',label:'รายรับ-รายจ่าย'},
       {page:'receivable',href:'receivable.html',icon:'📌',label:'ยอดค้างชำระ'},
+      {page:'report',    href:'report.html',    icon:'📑',label:'Report'},
     ]},
     {label:'ทรัพยากร',items:[
       {page:'payroll',href:'payroll.html',icon:'👷',label:'ค่าแรง & เช็คยอด'},

@@ -173,6 +173,7 @@ Visibility: Public ✅ (ต้องเป็น Public สำหรับ GitHu
    finance.html
    payroll.html
    receivable.html
+   report.html
    assets/
      ├── style.css
      ├── app.js
