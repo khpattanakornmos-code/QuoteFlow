@@ -1,66 +1,24 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>ค่าแรง – QuoteFlow</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <style>
-/* Worker card grid */
-.worker-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
-
-.worker-card {
-  background:#fff; border:1px solid var(--border);
-  border-radius:var(--radius); padding:18px 20px;
-  box-shadow:var(--shadow-xs); transition:all var(--t);
-  position:relative; overflow:hidden;
-}
-.worker-card:hover { box-shadow:var(--shadow-md); border-color:var(--blue-light); }
-.worker-card.paid  { opacity:.75; }
-.worker-card.paid::before { content:'✅ จ่ายแล้ว'; position:absolute; top:12px; right:12px; background:#d1fae5; color:#065f46; font-size:10px; font-weight:700; padding:2px 10px; border-radius:12px; border:1px solid #a7f3d0; }
-
-.worker-avatar {
-  width:42px; height:42px; border-radius:12px;
-  display:flex; align-items:center; justify-content:center;
-  font-size:18px; font-weight:700; color:#fff;
-  flex-shrink:0;
-}
-.av-internal { background:linear-gradient(135deg,#3b82f6,#60a5fa); box-shadow:0 4px 12px rgba(59,130,246,.3); }
-.av-external { background:linear-gradient(135deg,#10b981,#34d399); box-shadow:0 4px 12px rgba(16,185,129,.3); }
-
-.worker-type-badge {
-  display:inline-flex; align-items:center; gap:4px;
-  padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600;
-}
-.wt-internal { background:#dbeafe; color:#1e40af; }
-.wt-external { background:#d1fae5; color:#065f46; }
-
-/* Filter row */
-.filter-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.f-tab {
-  padding:6px 16px; border-radius:20px; font-size:13px; font-weight:500;
-  border:1.5px solid var(--border); background:#fff; color:var(--text2);
-  cursor:pointer; transition:all var(--t); font-family:var(--font);
-}
-.f-tab:hover  { border-color:var(--blue); color:var(--blue); background:var(--blue-pale); }
-.f-tab.active { background:var(--blue-grad); color:#fff; border-color:transparent; box-shadow:var(--shadow-sm); }
-
-/* Due date chip */
-.due-chip {
-  font-size:11px; padding:2px 8px; border-radius:8px;
-}
-.due-ok      { background:#d1fae5; color:#065f46; }
-.due-soon    { background:#fef3c7; color:#92400e; }
-.due-overdue { background:#fee2e2; color:#991b1b; }
+.worker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.worker-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow-xs);transition:all var(--t);}
+.worker-card:hover{box-shadow:var(--shadow-md);border-color:var(--blue-light);}
+.w-avatar{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0;}
+.f-tab{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:500;border:1.5px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;transition:all var(--t);font-family:var(--font);}
+.f-tab.active{background:var(--blue-grad);color:#fff;border-color:transparent;box-shadow:var(--shadow-sm);}
 </style>
 </head>
 <body>
 <div class="app-layout">
   <div id="nav-root"></div>
   <div class="main-content">
-
     <div class="topbar">
       <div class="flex-center gap-12">
         <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
@@ -68,39 +26,18 @@
       </div>
       <div class="topbar-actions">
         <button class="btn btn-outline btn-sm" onclick="loadPayroll()">🔄</button>
-        <button class="btn btn-primary" onclick="QuoteFlow.QuoteFlow.openModal('payModal')">+ เพิ่มรายการ</button>
+        <button class="btn btn-primary" onclick="QuoteFlow.openModal('payModal')">+ เพิ่มรายการ</button>
       </div>
     </div>
-
     <div class="page-body">
-
-      <!-- Stats -->
       <div class="grid grid-4 mb-24">
-        <div class="card stat-card amber">
-          <div class="stat-icon">⏳</div>
-          <div class="stat-value" id="st-pending">฿0</div>
-          <div class="stat-label">รอจ่ายทั้งหมด</div>
-        </div>
-        <div class="card stat-card blue">
-          <div class="stat-icon">👷</div>
-          <div class="stat-value" id="st-internal">฿0</div>
-          <div class="stat-label">ค่าแรงพนักงานใน</div>
-        </div>
-        <div class="card stat-card teal">
-          <div class="stat-icon">🔧</div>
-          <div class="stat-value" id="st-external">฿0</div>
-          <div class="stat-label">ค่าแรงช่างนอก</div>
-        </div>
-        <div class="card stat-card green">
-          <div class="stat-icon">✅</div>
-          <div class="stat-value" id="st-paid">฿0</div>
-          <div class="stat-label">จ่ายแล้วรวม</div>
-        </div>
+        <div class="card stat-card amber"><div class="stat-icon">⏳</div><div class="stat-value" id="st-pending">฿0</div><div class="stat-label">รอจ่ายทั้งหมด</div></div>
+        <div class="card stat-card blue"><div class="stat-icon">👷</div><div class="stat-value" id="st-int">฿0</div><div class="stat-label">พนักงานใน</div></div>
+        <div class="card stat-card teal"><div class="stat-icon">🔧</div><div class="stat-value" id="st-ext">฿0</div><div class="stat-label">ช่างนอก</div></div>
+        <div class="card stat-card green"><div class="stat-icon">✅</div><div class="stat-value" id="st-paid">฿0</div><div class="stat-label">จ่ายแล้วรวม</div></div>
       </div>
-
-      <!-- Filter -->
-      <div class="card mb-20" style="padding:14px 18px;">
-        <div class="filter-row">
+      <div class="card mb-20" style="padding:12px 16px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="f-tab active" data-f="all">ทั้งหมด</button>
           <button class="f-tab" data-f="พนักงาน">👷 พนักงานใน</button>
           <button class="f-tab" data-f="ช่างนอก">🔧 ช่างนอก</button>
@@ -108,49 +45,42 @@
           <button class="f-tab" data-f="Paid">✅ จ่ายแล้ว</button>
         </div>
       </div>
-
-      <!-- Cards -->
       <div class="worker-grid" id="workerGrid"></div>
-
     </div>
   </div>
 </div>
 
-<!-- ═══ ADD MODAL ═════════════════════════════════════════ -->
+<!-- ADD MODAL -->
 <div class="modal-overlay" id="payModal">
   <div class="modal modal-sm">
     <div class="modal-header">
       <div class="modal-title">👷 เพิ่มรายการค่าแรง</div>
-      <button class="modal-close" onclick="QuoteFlow.QuoteFlow.closeModal('payModal')">✕</button>
+      <button class="modal-close" onclick="QuoteFlow.closeModal('payModal')">✕</button>
     </div>
-
-    <!-- Worker type toggle -->
     <div style="display:flex;gap:10px;margin-bottom:20px;">
-      <button class="btn btn-primary" id="wt-internal" onclick="setWT('พนักงาน',this)" style="flex:1;justify-content:center;">👷 พนักงานใน</button>
-      <button class="btn btn-outline" id="wt-external" onclick="setWT('ช่างนอก',this)" style="flex:1;justify-content:center;">🔧 ช่างนอก</button>
+      <button class="btn btn-primary" id="wt-int" onclick="setWT('พนักงาน')" style="flex:1;justify-content:center;">👷 พนักงานใน</button>
+      <button class="btn btn-outline" id="wt-ext" onclick="setWT('ช่างนอก')"  style="flex:1;justify-content:center;">🔧 ช่างนอก</button>
     </div>
     <input type="hidden" id="workerType" value="พนักงาน">
-
-    <div class="form-group mb-14">
+    <div class="form-group mb-12">
       <label class="form-label">ชื่อผู้รับเงิน *</label>
       <input class="form-input" id="workerName" placeholder="ชื่อพนักงาน / ช่าง">
     </div>
-    <div class="form-group mb-14">
+    <div class="form-group mb-12">
       <label class="form-label">ยอดเงิน (บาท) *</label>
-      <input type="number" class="form-input" id="payAmount" placeholder="0.00" min="0" step="0.01" style="font-size:18px;font-weight:600;">
+      <input type="number" class="form-input" id="payAmount" placeholder="0.00" min="0" style="font-size:18px;font-weight:600;">
     </div>
-    <div class="form-group mb-14">
+    <div class="form-group mb-12">
       <label class="form-label">รายละเอียดงาน</label>
-      <input class="form-input" id="payDesc" placeholder="งานที่ทำ, Order ที่เกี่ยวข้อง...">
+      <input class="form-input" id="payDesc" placeholder="งานที่ทำ...">
     </div>
     <div class="form-group mb-20">
       <label class="form-label">กำหนดจ่าย</label>
       <input type="date" class="form-input" id="payDue">
     </div>
-
     <div class="flex-center gap-10" style="justify-content:flex-end;">
-      <button class="btn btn-outline" onclick="QuoteFlow.QuoteFlow.closeModal('payModal')">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="savePay()">💾 บันทึก</button>
+      <button class="btn btn-outline" onclick="QuoteFlow.closeModal('payModal')">ยกเลิก</button>
+      <button class="btn btn-primary" id="btnSavePay" onclick="savePay()">💾 บันทึก</button>
     </div>
   </div>
 </div>
@@ -161,123 +91,103 @@
 QuoteFlow.requireAuth();
 injectSidebar('payroll');
 
-let payData   = [];
-let filterMode = 'all';
+var payData = [];
+var filterMode = 'all';
+var _saving = false;
 
-function setWT(type, btn) {
-  document.getElementById('workerType').value = type;
-  document.getElementById('wt-internal').className = 'btn ' + (type==='พนักงาน'?'btn-primary':'btn-outline');
-  document.getElementById('wt-internal').style = 'flex:1;justify-content:center;';
-  document.getElementById('wt-external').className = 'btn ' + (type==='ช่างนอก'?'btn-primary':'btn-outline');
-  document.getElementById('wt-external').style = 'flex:1;justify-content:center;';
+function setWT(t){
+  document.getElementById('workerType').value = t;
+  document.getElementById('wt-int').className='btn '+(t==='พนักงาน'?'btn-primary':'btn-outline')+' ';
+  document.getElementById('wt-int').style='flex:1;justify-content:center;';
+  document.getElementById('wt-ext').className='btn '+(t==='ช่างนอก'?'btn-primary':'btn-outline')+' ';
+  document.getElementById('wt-ext').style='flex:1;justify-content:center;';
 }
 
-async function loadPayroll() {
-  const res = await QuoteFlow.api('getPayroll');
-  if (!res.success) return;
-  payData = res.data;
-
-  const pending  = payData.filter(r=>r.status==='Pending').reduce((s,r)=>s+Number(r.amount),0);
-  const internal = payData.filter(r=>r.workerType==='พนักงาน').reduce((s,r)=>s+Number(r.amount),0);
-  const external = payData.filter(r=>r.workerType==='ช่างนอก').reduce((s,r)=>s+Number(r.amount),0);
-  const paid     = payData.filter(r=>r.status==='Paid').reduce((s,r)=>s+Number(r.amount),0);
-
-  document.getElementById('st-pending').textContent  = QuoteFlow.baht(pending);
-  document.getElementById('st-internal').textContent = QuoteFlow.baht(internal);
-  document.getElementById('st-external').textContent = QuoteFlow.baht(external);
-  document.getElementById('st-paid').textContent     = QuoteFlow.baht(paid);
-
-  renderCards();
+function loadPayroll(){
+  QuoteFlow.api('getPayroll').then(function(res){
+    if(!res.success)return;
+    payData=res.data||[];
+    var pending = payData.filter(function(r){return r.status==='Pending';}).reduce(function(s,r){return s+Number(r.amount||0);},0);
+    var intAmt  = payData.filter(function(r){return r.workerType==='พนักงาน';}).reduce(function(s,r){return s+Number(r.amount||0);},0);
+    var extAmt  = payData.filter(function(r){return r.workerType==='ช่างนอก';}).reduce(function(s,r){return s+Number(r.amount||0);},0);
+    var paid    = payData.filter(function(r){return r.status==='Paid';}).reduce(function(s,r){return s+Number(r.amount||0);},0);
+    document.getElementById('st-pending').textContent = QuoteFlow.baht(pending);
+    document.getElementById('st-int').textContent     = QuoteFlow.baht(intAmt);
+    document.getElementById('st-ext').textContent     = QuoteFlow.baht(extAmt);
+    document.getElementById('st-paid').textContent    = QuoteFlow.baht(paid);
+    renderCards();
+  });
 }
 
-function renderCards() {
-  let list = payData;
-  if (filterMode === 'พนักงาน') list = list.filter(r=>r.workerType==='พนักงาน');
-  else if (filterMode === 'ช่างนอก') list = list.filter(r=>r.workerType==='ช่างนอก');
-  else if (filterMode === 'Pending') list = list.filter(r=>r.status==='Pending');
-  else if (filterMode === 'Paid')    list = list.filter(r=>r.status==='Paid');
+function renderCards(){
+  var list = payData;
+  if(filterMode==='พนักงาน') list=list.filter(function(r){return r.workerType==='พนักงาน';});
+  else if(filterMode==='ช่างนอก') list=list.filter(function(r){return r.workerType==='ช่างนอก';});
+  else if(filterMode==='Pending')  list=list.filter(function(r){return r.status==='Pending';});
+  else if(filterMode==='Paid')     list=list.filter(function(r){return r.status==='Paid';});
 
-  const el = document.getElementById('workerGrid');
-  if (!list.length) {
-    el.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">👷</div><p>ยังไม่มีรายการ</p></div>';
-    return;
-  }
-
-  const today = new Date();
-  el.innerHTML = list.map(r => {
-    const isInternal = r.workerType === 'พนักงาน';
-    const initial    = (r.workerName||'?')[0].toUpperCase();
-    let dueClass = 'due-ok'; let dueLabel = '';
-    if (r.dueDate && r.status==='Pending') {
-      const due  = new Date(r.dueDate);
-      const diff = Math.ceil((due - today) / 86400000);
-      if (diff < 0)    { dueClass='due-overdue'; dueLabel=`เกิน ${Math.abs(diff)} วัน`; }
-      else if (diff<=3){ dueClass='due-soon';    dueLabel=`อีก ${diff} วัน`; }
-      else              { dueLabel = QuoteFlow.fmtDate(r.dueDate); }
-    }
-    return `
-    <div class="worker-card ${r.status==='Paid'?'paid':''}">
-      <div class="flex-between mb-12">
-        <div class="flex-center gap-10">
-          <div class="worker-avatar ${isInternal?'av-internal':'av-external'}">${initial}</div>
-          <div>
-            <div style="font-weight:600;font-size:14px;color:var(--text);">${r.workerName||'-'}</div>
-            <span class="worker-type-badge ${isInternal?'wt-internal':'wt-external'}">${isInternal?'👷 พนักงานใน':'🔧 ช่างนอก'}</span>
-          </div>
-        </div>
-      </div>
-
-      <div style="font-size:22px;font-weight:700;color:var(--blue);margin-bottom:6px;">${QuoteFlow.baht(r.amount)}</div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">${r.description||'–'}</div>
-
-      <div class="flex-between">
-        <div>
-          ${r.dueDate&&r.status==='Pending' ? `<span class="due-chip ${dueClass}">📅 ${dueLabel}</span>` : (r.status==='Paid'?'<span class="due-chip due-ok">✅ จ่ายแล้ว</span>':'')}
-        </div>
-        ${r.status==='Pending' ? `
-          <button class="btn btn-green btn-sm" onclick="markPaid('${r.id}')">
-            ✅ จ่ายแล้ว
-          </button>` : ''}
-      </div>
-    </div>`;
+  var el = document.getElementById('workerGrid');
+  if(!list.length){el.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">👷</div><p>ยังไม่มีรายการ</p></div>';return;}
+  var today = new Date();
+  el.innerHTML = list.map(function(r){
+    var isInt = r.workerType==='พนักงาน';
+    var init  = (r.workerName||'?')[0].toUpperCase();
+    var overdue = r.status==='Pending'&&r.dueDate&&new Date(r.dueDate)<today;
+    return '<div class="worker-card">'+
+      '<div class="flex-between mb-12">'+
+        '<div class="flex-center gap-10">'+
+          '<div class="w-avatar" style="background:'+(isInt?'linear-gradient(135deg,#3b82f6,#60a5fa)':'linear-gradient(135deg,#10b981,#34d399)')+'">'+init+'</div>'+
+          '<div>'+
+            '<div style="font-weight:600;font-size:14px;">'+( r.workerName||'-')+'</div>'+
+            '<span class="badge '+(isInt?'badge-active':'badge-pending')+'">'+(isInt?'👷 พนักงาน':'🔧 ช่างนอก')+'</span>'+
+          '</div>'+
+        '</div>'+
+        '<span class="badge '+(r.status==='Paid'?'badge-paid':'badge-pending')+'">'+(r.status==='Paid'?'✅ จ่ายแล้ว':'⏳ รอจ่าย')+'</span>'+
+      '</div>'+
+      '<div style="font-size:22px;font-weight:700;color:var(--blue);margin-bottom:6px;">'+QuoteFlow.baht(r.amount)+'</div>'+
+      '<div style="font-size:12px;color:var(--text3);margin-bottom:10px;">'+(r.description||'–')+'</div>'+
+      '<div class="flex-between">'+
+        '<span style="font-size:11px;color:'+(overdue?'var(--red)':'var(--text3)')+';">'+(r.dueDate?'📅 '+QuoteFlow.fmtDate(r.dueDate):'')+'</span>'+
+        (r.status==='Pending'?'<button class="btn btn-green btn-sm" onclick="markPaid(\''+r.id+'\')">✅ จ่ายแล้ว</button>':'')+
+      '</div>'+
+    '</div>';
   }).join('');
 }
 
-async function savePay() {
-  const wn = document.getElementById('workerName').value.trim();
-  const am = Number(document.getElementById('payAmount').value);
-  if (!wn) return QuoteFlow.toast('กรุณาใส่ชื่อผู้รับ', 'error');
-  if (!am||am<=0) return QuoteFlow.toast('กรุณาใส่ยอดเงิน', 'error');
-  const res = await QuoteFlow.api('addPayroll', {
-    workerName: wn,
-    workerType: document.getElementById('workerType').value,
-    amount: am,
-    description: document.getElementById('payDesc').value.trim(),
-    dueDate: document.getElementById('payDue').value,
-    status: 'Pending'
+function savePay(){
+  if(_saving)return;
+  var wn=document.getElementById('workerName').value.trim();
+  var am=Number(document.getElementById('payAmount').value);
+  if(!wn){QuoteFlow.toast('กรุณาใส่ชื่อผู้รับ','error');return;}
+  if(!am||am<=0){QuoteFlow.toast('กรุณาใส่ยอดเงิน','error');return;}
+  _saving=true; document.getElementById('btnSavePay').disabled=true;
+  QuoteFlow.api('addPayroll',{
+    workerName:wn, workerType:document.getElementById('workerType').value,
+    amount:am, description:document.getElementById('payDesc').value.trim(),
+    dueDate:document.getElementById('payDue').value, status:'Pending',
+  }).then(function(res){
+    _saving=false; document.getElementById('btnSavePay').disabled=false;
+    if(res.success){
+      QuoteFlow.toast('บันทึกสำเร็จ! ✅','success');
+      QuoteFlow.closeModal('payModal');
+      document.getElementById('workerName').value='';
+      document.getElementById('payAmount').value='';
+      document.getElementById('payDesc').value='';
+      setTimeout(loadPayroll,2800);
+    }
   });
-  if (res.success) {
-    QuoteFlow.toast('บันทึกสำเร็จ! 🎉', 'success');
-    QuoteFlow.closeModal('payModal');
-    document.getElementById('workerName').value = '';
-    document.getElementById('payAmount').value  = '';
-    document.getElementById('payDesc').value    = '';
-    document.getElementById('payDue').value     = '';
-    loadPayroll();
-  }
 }
 
-async function markPaid(id) {
-  const res = await QuoteFlow.api('updatePayroll', { id, status: 'Paid' });
-  if (res.success) { QuoteFlow.toast('บันทึกการจ่ายแล้ว ✅', 'success'); loadPayroll(); }
+function markPaid(id){
+  QuoteFlow.api('updatePayroll',{id:id,status:'Paid'}).then(function(r){
+    if(r.success){QuoteFlow.toast('บันทึกการจ่ายแล้ว ✅','success');setTimeout(loadPayroll,2800);}
+  });
 }
 
-document.querySelectorAll('.f-tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.f-tab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    filterMode = btn.dataset.f;
-    renderCards();
+document.querySelectorAll('.f-tab').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.f-tab').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active'); filterMode=btn.dataset.f; renderCards();
   });
 });
 
