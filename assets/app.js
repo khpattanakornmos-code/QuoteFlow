@@ -1,330 +1,264 @@
 // ============================================================
-// QuoteFlow — app.js  v6
-// แก้: email ถูกส่งใน POST ทุกครั้ง
-// แก้: หลัง write → GET ใหม่เพื่อ refresh ข้อมูล
+// QuoteFlow — app.js  (Complete)
+// READ → GET, WRITE → POST no-cors
+// Email ถูกส่งไปใน payload เสมอ
 // ============================================================
 
 var CONFIG = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbw7sXiSrH96l2BnjGbG_hgLaFi7e9iTJ7skWByk5mI56YYXVrZNARoT1Z--PEGs5qLp/exec',
-  GOOGLE_CLIENT_ID: '637690103992-85cf7gvvu6a57bbrnbga826oh0t4bvvi.apps.googleusercontent.com',
+  API_URL: 'https://script.google.com/macros/s/AKfycbw7sXiSrH96l2BnjGbG_hgLaFi7e9iTJ7skWByk5mI56YYXVrZNARoT1Z--PEGs5qLp/exec', // 🔴 ใส่ URL จาก Apps Script Deploy
+  GOOGLE_CLIENT_ID: '637690103992-85cf7gvvu6a57bbrnbga826oh0t4bvvi.apps.googleusercontent.com', // 🔴
 };
 
 var READ_ACTIONS = [
-  'ping','login','getProfile',
-  'getQuotations','getActiveOrders',
+  'ping','login','getQuotations','getActiveOrders',
   'getFinance','getPayroll','getReceivables','getDashboard',
 ];
 
-function isRead(action) { return READ_ACTIONS.indexOf(action) >= 0; }
-
-// ── API หลัก ───────────────────────────────────────────────
 function api(action, data) {
-  data = data || {};
+  data  = data  || {};
   var user  = getUser();
   var email = (user && user.email) ? user.email : '';
-
-  // ✅ ใส่ email ใน data เสมอ เพื่อให้ Apps Script บันทึกได้ถูกต้อง
+  // ใส่ email ใน data เสมอ
   if (!data.email) data.email = email;
 
-  if (isRead(action)) {
+  if (READ_ACTIONS.indexOf(action) >= 0) {
     return doGET(action, data, email);
-  } else {
-    return doPOST(action, data, email);
   }
+  return doPOST(action, data, email);
 }
 
-// GET — อ่านข้อมูล
 function doGET(action, data, email) {
-  var qs  = 'action=' + encodeURIComponent(action)
-          + '&email=' + encodeURIComponent(email)
-          + '&data='  + encodeURIComponent(JSON.stringify(data || {}));
-  var url = CONFIG.API_URL + '?' + qs;
-  return fetch(url, { method:'GET', redirect:'follow' })
-    .then(function(r) { return r.text(); })
-    .then(function(t) {
-      try { return JSON.parse(t); }
-      catch(e) { console.error('GET parse fail:', t.slice(0,200)); return { success:false }; }
+  var qs  = 'action='+encodeURIComponent(action)
+          + '&email='+encodeURIComponent(email)
+          + '&data=' +encodeURIComponent(JSON.stringify(data));
+  return fetch(CONFIG.API_URL+'?'+qs, {method:'GET',redirect:'follow'})
+    .then(function(r){return r.text();})
+    .then(function(t){
+      try{return JSON.parse(t);}
+      catch(e){console.error('GET parse:',t.slice(0,200));return{success:false};}
     })
-    .catch(function(e) {
-      console.error('GET err['+action+']:', e.message);
-      return { success:false, error:e.message };
+    .catch(function(e){
+      console.error('GET['+action+']:',e.message);
+      return{success:false,error:e.message};
     });
 }
 
-// POST no-cors — เขียนข้อมูล
-// หลัง POST เสร็จ รอ 2.5s แล้ว return { success:true }
-// caller ต้อง GET ใหม่เองเพื่อ refresh UI
 function doPOST(action, data, email) {
   var clean = stripImg(data);
-  // ✅ ตรวจว่า email อยู่ใน clean ด้วย
   if (!clean.email) clean.email = email;
-  var body = JSON.stringify({ action:action, data:clean, email:email });
-
+  var body = JSON.stringify({action:action, data:clean, email:email});
   return fetch(CONFIG.API_URL, {
-    method  : 'POST',
-    mode    : 'no-cors',
-    headers : { 'Content-Type':'text/plain' },
-    body    : body,
+    method:'POST', mode:'no-cors',
+    headers:{'Content-Type':'text/plain'}, body:body,
   })
-  .then(function() {
-    return new Promise(function(resolve) {
-      setTimeout(function() { resolve({ success:true }); }, 2500);
-    });
+  .then(function(){
+    return new Promise(function(res){setTimeout(function(){res({success:true});},2500);});
   })
-  .catch(function(e) {
-    console.error('POST err['+action+']:', e.message);
-    return { success:false, error:e.message };
-  });
+  .catch(function(e){return{success:false,error:e.message};});
 }
 
 function stripImg(data) {
   if (!data) return {};
   var out = JSON.parse(JSON.stringify(data));
   if (Array.isArray(out.items)) {
-    out.items = out.items.map(function(it) {
-      var i = Object.assign({}, it);
-      if (i.img && String(i.img).length > 500) i.img = '';
+    out.items = out.items.map(function(it){
+      var i=Object.assign({},it);
+      if(i.img&&String(i.img).length>500)i.img='';
       return i;
     });
   }
   return out;
 }
 
-// ── AUTH ───────────────────────────────────────────────────
-function getUser() {
-  try { return JSON.parse(localStorage.getItem('qf_user')||'null'); }
-  catch(e) { return null; }
+// ── AUTH ──────────────────────────────────────────────────
+function getUser(){
+  try{return JSON.parse(localStorage.getItem('qf_user')||'null');}catch(e){return null;}
 }
-function setUser(u) { localStorage.setItem('qf_user', JSON.stringify(u)); }
-function logout() {
+function setUser(u){localStorage.setItem('qf_user',JSON.stringify(u));}
+function logout(){
   localStorage.removeItem('qf_user');
-  try { google.accounts.id.disableAutoSelect(); } catch(e) {}
-  window.location.href = 'index.html';
+  try{google.accounts.id.disableAutoSelect();}catch(e){}
+  window.location.href='index.html';
 }
-function requireAuth() {
-  var u = getUser();
-  if (!u) { window.location.href = 'index.html'; return null; }
-  return u;
+function requireAuth(){
+  var u=getUser(); if(!u){window.location.href='index.html';return null;} return u;
 }
-function googleSignIn(cb) {
-  if (typeof google === 'undefined') return;
+function googleSignIn(cb){
+  if(typeof google==='undefined')return;
   google.accounts.id.initialize({
-    client_id  : CONFIG.GOOGLE_CLIENT_ID,
-    callback   : function(resp) {
-      var p = parseJwt(resp.credential);
-      api('login', { email:p.email, name:p.name||p.email.split('@')[0] })
-        .then(function(r) {
-          var u = (r&&r.success&&r.user) ? r.user
-            : { email:p.email, name:p.name||p.email.split('@')[0], role:'admin' };
-          setUser(u);
-          if (cb) cb(u);
-        });
+    client_id:CONFIG.GOOGLE_CLIENT_ID,
+    callback:function(resp){
+      var p=parseJwt(resp.credential);
+      api('login',{email:p.email,name:p.name||p.email.split('@')[0]}).then(function(r){
+        var u=(r&&r.success&&r.user)?r.user:{email:p.email,name:p.name||p.email.split('@')[0],role:'admin'};
+        setUser(u); if(cb)cb(u);
+      });
     },
-    auto_select: false,
+    auto_select:false,
   });
-  var el = document.getElementById('googleBtn');
-  if (el) {
-    google.accounts.id.renderButton(el,{theme:'outline',size:'large',shape:'pill',width:300});
-    google.accounts.id.prompt();
-  }
+  var el=document.getElementById('googleBtn');
+  if(el){google.accounts.id.renderButton(el,{theme:'outline',size:'large',shape:'pill',width:300});google.accounts.id.prompt();}
 }
-function parseJwt(token) {
-  try {
-    var b = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
-    return JSON.parse(decodeURIComponent(
-      atob(b).split('').map(function(c){return '%'+('00'+c.charCodeAt(0).toString(16)).slice(-2);}).join('')
-    ));
-  } catch(e) { return {}; }
+function parseJwt(token){
+  try{
+    var b=token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    return JSON.parse(decodeURIComponent(atob(b).split('').map(function(c){return'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2);}).join('')));
+  }catch(e){return{};}
 }
 
-// ── FORMAT ─────────────────────────────────────────────────
-function baht(n) {
-  return '฿'+(Number(n)||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
-}
-function fmtDate(d) {
-  if (!d) return '-';
-  try { return new Date(d).toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'}); }
-  catch(e) { return '-'; }
-}
-function shortId(id) { return id ? String(id).substring(0,12) : '-'; }
+// ── FORMAT ────────────────────────────────────────────────
+function baht(n){return'฿'+(Number(n)||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtDate(d){if(!d)return'-';try{return new Date(d).toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'});}catch(e){return'-';}}
+function shortId(id){return id?String(id).substring(0,12):'-';}
 
-// ── TOAST ──────────────────────────────────────────────────
-function toast(msg, type) {
-  type = type||'success';
-  var wrap = document.getElementById('_tw');
-  if (!wrap) {
-    wrap = document.createElement('div');
-    wrap.id = '_tw';
-    wrap.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
-    document.body.appendChild(wrap);
-  }
-  var C = {
-    success:{bg:'#d1fae5',bd:'#6ee7b7',tx:'#065f46',ic:'✅'},
-    error  :{bg:'#fee2e2',bd:'#fca5a5',tx:'#991b1b',ic:'❌'},
-    warn   :{bg:'#fef3c7',bd:'#fcd34d',tx:'#92400e',ic:'⚠️'},
-    info   :{bg:'#dbeafe',bd:'#93c5fd',tx:'#1e40af',ic:'ℹ️'},
-  };
-  var c = C[type]||C.info;
-  if (!document.getElementById('_tkf')) {
-    var s=document.createElement('style');s.id='_tkf';
-    s.textContent='@keyframes _ti{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}';
-    document.head.appendChild(s);
-  }
-  var el = document.createElement('div');
-  el.style.cssText = 'background:'+c.bg+';border:1.5px solid '+c.bd+';color:'+c.tx+
-    ';padding:11px 18px;border-radius:12px;font-family:Prompt,sans-serif;font-size:13.5px;'+
-    'font-weight:500;box-shadow:0 4px 20px rgba(59,130,246,.15);display:flex;align-items:center;'+
-    'gap:8px;max-width:320px;pointer-events:auto;animation:_ti .3s ease;';
-  el.innerHTML = '<span style="font-size:16px;flex-shrink:0">'+c.ic+'</span><span>'+msg+'</span>';
+// ── TOAST ─────────────────────────────────────────────────
+function toast(msg,type){
+  type=type||'success';
+  var wrap=document.getElementById('_tw');
+  if(!wrap){wrap=document.createElement('div');wrap.id='_tw';
+    wrap.style.cssText='position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+    document.body.appendChild(wrap);}
+  var C={success:{bg:'#d1fae5',bd:'#6ee7b7',tx:'#065f46',ic:'✅'},error:{bg:'#fee2e2',bd:'#fca5a5',tx:'#991b1b',ic:'❌'},warn:{bg:'#fef3c7',bd:'#fcd34d',tx:'#92400e',ic:'⚠️'},info:{bg:'#dbeafe',bd:'#93c5fd',tx:'#1e40af',ic:'ℹ️'}};
+  var c=C[type]||C.info;
+  if(!document.getElementById('_tkf')){var s=document.createElement('style');s.id='_tkf';s.textContent='@keyframes _ti{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}';document.head.appendChild(s);}
+  var el=document.createElement('div');
+  el.style.cssText='background:'+c.bg+';border:1.5px solid '+c.bd+';color:'+c.tx+';padding:11px 18px;border-radius:12px;font-family:Prompt,sans-serif;font-size:13.5px;font-weight:500;box-shadow:0 4px 20px rgba(59,130,246,.15);display:flex;align-items:center;gap:8px;max-width:320px;pointer-events:auto;animation:_ti .3s ease;';
+  el.innerHTML='<span style="font-size:16px;flex-shrink:0">'+c.ic+'</span><span>'+msg+'</span>';
   wrap.appendChild(el);
-  setTimeout(function(){
-    el.style.opacity='0';el.style.transform='translateX(110%)';el.style.transition='all .25s';
-    setTimeout(function(){el.remove();},260);
-  },3500);
+  setTimeout(function(){el.style.opacity='0';el.style.transform='translateX(110%)';el.style.transition='all .25s';setTimeout(function(){el.remove();},260);},3500);
 }
+function openModal(id){var e=document.getElementById(id);if(e)e.classList.add('open');}
+function closeModal(id){var e=document.getElementById(id);if(e)e.classList.remove('open');}
 
-// ── MODAL ──────────────────────────────────────────────────
-function openModal(id)  { var e=document.getElementById(id); if(e) e.classList.add('open'); }
-function closeModal(id) { var e=document.getElementById(id); if(e) e.classList.remove('open'); }
+// ── PDF — ตรงตามใบจริง ────────────────────────────────────
+function exportQuotationPDF(qt, companyInfo) {
+  if(!window.jspdf){toast('กำลังโหลด PDF...','info');return;}
+  companyInfo = companyInfo || {};
+  var doc = new window.jspdf.jsPDF({unit:'mm',format:'a4'});
+  var items = Array.isArray(qt.items)?qt.items:[];
+  var W=210, margin=15;
 
-// ── PDF — ตรงตามตัวอย่าง ───────────────────────────────────
-function exportQuotationPDF(qt) {
-  if (!window.jspdf) { toast('กำลังโหลด PDF...','info'); return; }
-  var doc = new window.jspdf.jsPDF({ unit:'mm', format:'a4' });
-  var items = Array.isArray(qt.items) ? qt.items : [];
+  // ── Header ─────────────────────────────────────────────
+  doc.setFillColor(26,76,113);
+  doc.rect(0,0,W,50,'F');
 
-  // ── Header สีเข้ม ──────────────────────────────────────
-  doc.setFillColor(30, 80, 120);
-  doc.rect(0, 0, 210, 45, 'F');
-
-  // Logo / ชื่อบริษัท
+  // Logo placeholder
+  doc.setFillColor(255,255,255,0.2);
+  doc.setDrawColor(255,255,255);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(margin,8,28,28,3,3,'S');
   doc.setTextColor(255,255,255);
-  doc.setFontSize(18); doc.setFont('helvetica','bold');
-  doc.text('QuoteFlow', 15, 18);
-  doc.setFontSize(10); doc.setFont('helvetica','normal');
-  doc.text('thongpimfurniture@gmail.com', 15, 26);
+  doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.text('LOGO',margin+14,25,{align:'center'});
 
-  // ชื่อเอกสาร
+  // ชื่อบริษัท
+  doc.setFontSize(16); doc.setFont('helvetica','bold');
+  doc.text(companyInfo.name||'QuoteFlow', 50, 18);
+  doc.setFontSize(8); doc.setFont('helvetica','normal');
+  if(companyInfo.address) doc.text(companyInfo.address, 50, 25);
+  if(companyInfo.phone)   doc.text(companyInfo.phone,   50, 31);
+  if(companyInfo.email)   doc.text(companyInfo.email,   50, 37);
+
+  // ชื่อเอกสาร (ขวา)
   doc.setFontSize(20); doc.setFont('helvetica','bold');
-  doc.text('\u0E43\u0E1A\u0E40\u0E2A\u0E19\u0E2D\u0E23\u0E32\u0E04\u0E32', 195, 18, {align:'right'});
-  doc.setFontSize(10); doc.setFont('helvetica','normal');
-  doc.text('\u0E27\u0E31\u0E19\u0E17\u0E35\u0E48: ' + fmtDate(qt.createdAt), 195, 26, {align:'right'});
+  doc.text('QUOTATION', W-margin, 18, {align:'right'});
+  doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.text('เลขที่: '+( qt.id||''), W-margin, 26, {align:'right'});
+  doc.text('วันที่: '+fmtDate(qt.createdAt), W-margin, 32, {align:'right'});
 
-  // ── ลูกค้า ─────────────────────────────────────────────
-  doc.setTextColor(30,58,95);
-  doc.setFontSize(10); doc.setFont('helvetica','bold');
-  doc.text('\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32:', 15, 58);
-  doc.setFont('helvetica','normal');
-  doc.text(qt.customerName || '-', 35, 58);
-  doc.text('\u0E40\u0E25\u0E02: ' + (qt.id||''), 195, 58, {align:'right'});
-
-  if (qt.note) {
-    doc.setFontSize(9); doc.setTextColor(80,80,80);
-    doc.text(qt.note, 15, 65);
-  }
+  // ── ลูกค้า ────────────────────────────────────────────
+  var y = 60;
+  doc.setDrawColor(200,210,230);
+  doc.setFillColor(245,248,255);
+  doc.roundedRect(margin, y-5, W-margin*2, 22, 2, 2, 'FD');
+  doc.setTextColor(80,80,80); doc.setFontSize(8);
+  doc.text('ลูกค้า / Customer', margin+3, y+1);
+  doc.setTextColor(20,20,20); doc.setFontSize(11); doc.setFont('helvetica','bold');
+  doc.text(qt.customerName||'-', margin+3, y+9);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(80,80,80);
+  if(qt.note) doc.text(qt.note, margin+3, y+15, {maxWidth:W-margin*2-6});
 
   // ── ตารางสินค้า ────────────────────────────────────────
-  var y = 75;
-
-  // Header แถว
-  doc.setFillColor(240, 245, 255);
-  doc.rect(10, y-5, 190, 10, 'F');
-  doc.setDrawColor(200,210,230);
-  doc.line(10, y+5, 200, y+5);
-
-  doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(30,80,120);
-  doc.text('\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14', 15, y);
-  doc.text('\u0E08\u0E33\u0E19\u0E27\u0E19', 120, y, {align:'center'});
-  doc.text('\u0E23\u0E32\u0E04\u0E32', 155, y, {align:'right'});
-  doc.text('\u0E17\u0E31\u0E49\u0E07\u0E2B\u0E21\u0E14', 198, y, {align:'right'});
-
+  y = 92;
+  // Header
+  doc.setFillColor(26,76,113);
+  doc.rect(margin, y, W-margin*2, 8, 'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold');
+  doc.text('รายละเอียด', margin+3, y+5.5);
+  doc.text('จำนวน', 130, y+5.5, {align:'center'});
+  doc.text('ราคา', 158, y+5.5, {align:'right'});
+  doc.text('ทั้งหมด', W-margin, y+5.5, {align:'right'});
   y += 8;
-  doc.setFont('helvetica','normal'); doc.setTextColor(40,40,40);
 
+  doc.setTextColor(30,30,30); doc.setFont('helvetica','normal');
   items.forEach(function(it, i) {
-    if (y > 250) { doc.addPage(); y = 20; }
-
-    // สลับสีแถว
-    if (i % 2 === 0) {
-      doc.setFillColor(248,250,255);
-      doc.rect(10, y-4, 190, 14, 'F');
-    }
-
-    doc.setFontSize(9); doc.setFont('helvetica','bold');
-    doc.text(String(it.name||'-').substring(0,45), 15, y);
-    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(80,80,80);
-
-    // specs ถ้ามี
-    y += 5;
-    doc.setFontSize(9); doc.setTextColor(40,40,40);
-    doc.text(String(it.qty||1), 120, y, {align:'center'});
-    doc.text(baht(it.price), 155, y, {align:'right'});
-    doc.setFont('helvetica','bold');
-    doc.text(baht((it.qty||1)*(it.price||0)), 198, y, {align:'right'});
-    doc.setFont('helvetica','normal');
-
-    doc.setDrawColor(220,228,240);
-    doc.line(10, y+4, 200, y+4);
-    y += 10;
+    if(y > 230){doc.addPage(); y=20;}
+    var rowH = 12;
+    // สลับสี
+    if(i%2===0){doc.setFillColor(249,251,255);doc.rect(margin,y,W-margin*2,rowH,'F');}
+    doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(20,20,20);
+    doc.text(String(it.name||'-').substring(0,45), margin+3, y+5);
+    doc.setFont('helvetica','normal'); doc.setTextColor(60,60,60); doc.setFontSize(8);
+    doc.text(String(it.qty||1), 130, y+5, {align:'center'});
+    doc.text(baht(it.price), 158, y+5, {align:'right'});
+    doc.setFont('helvetica','bold'); doc.setTextColor(20,20,20);
+    doc.text(baht((it.qty||1)*(it.price||0)), W-margin, y+5, {align:'right'});
+    // เส้นคั่น
+    doc.setDrawColor(220,228,240); doc.setLineWidth(0.3);
+    doc.line(margin, y+rowH, W-margin, y+rowH);
+    y += rowH;
   });
 
-  // ── ยอดรวม ─────────────────────────────────────────────
+  // ── ยอดรวม ────────────────────────────────────────────
   y += 5;
-  doc.setDrawColor(30,80,120); doc.setLineWidth(0.5);
-  doc.line(120, y, 200, y);
-  y += 7;
-
-  doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(60,60,60);
-  doc.text('\u0E22\u0E2D\u0E14\u0E23\u0E27\u0E21:', 140, y);
-  doc.text(baht(qt.subtotal), 198, y, {align:'right'});
-  y += 7;
-
-  if (qt.vat > 0) {
-    doc.text('VAT 7%:', 140, y);
-    doc.text(baht(qt.vat), 198, y, {align:'right'});
-    y += 7;
+  doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(60,60,60);
+  doc.text('ยอดรวม:', 145, y); doc.text(baht(qt.subtotal), W-margin, y, {align:'right'}); y+=7;
+  if(Number(qt.vat)>0){
+    doc.text('ภาษีมูลค่าเพิ่ม 7%:', 130, y); doc.text(baht(qt.vat), W-margin, y, {align:'right'}); y+=7;
   }
-
-  // กล่องยอดรวมสุดท้าย
-  doc.setFillColor(30,80,120);
-  doc.roundedRect(120, y-5, 80, 14, 2, 2, 'F');
+  // กล่องรวมสุดท้าย
+  doc.setFillColor(26,76,113);
+  doc.roundedRect(125, y-5, W-margin-125, 12, 2,2,'F');
   doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(11);
-  doc.text('\u0E23\u0E27\u0E21', 135, y+4);
-  doc.text(baht(qt.total), 198, y+4, {align:'right'});
+  doc.text('รวม', 135, y+3.5);
+  doc.text(baht(qt.total), W-margin, y+3.5, {align:'right'});
 
-  // ── เงื่อนไข / หมายเหตุ ────────────────────────────────
-  if (qt.note) {
-    y += 22;
-    doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(40,40,40);
-    doc.text(qt.note, 15, y, {maxWidth:120});
+  // ── เงื่อนไขการชำระเงิน ──────────────────────────────
+  if(qt.note){
+    y += 20;
+    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(26,76,113);
+    doc.text('หมายเหตุ / เงื่อนไข:', margin, y);
+    doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50); y+=6;
+    var lines = doc.splitTextToSize(qt.note, W-margin*2-5);
+    doc.text(lines, margin+3, y);
   }
 
-  // ── ลายเซ็น ────────────────────────────────────────────
-  y = 255;
-  doc.setFontSize(9); doc.setTextColor(60,60,60); doc.setFont('helvetica','normal');
-  doc.text('\u0E1C\u0E39\u0E49\u0E40\u0E2A\u0E19\u0E2D\u0E23\u0E32\u0E04\u0E32', 155, y, {align:'center'});
-  doc.line(130, y+15, 182, y+15);
-  doc.text('(................................................)', 155, y+20, {align:'center'});
+  // ── ลายเซ็น ───────────────────────────────────────────
+  var sigY = 255;
+  doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(60,60,60);
+  doc.text('ผู้เสนอราคา', W/2, sigY, {align:'center'});
+  doc.setLineWidth(0.5); doc.setDrawColor(100,100,100);
+  doc.line(W/2-30, sigY+18, W/2+30, sigY+18);
+  doc.setFontSize(8);
+  doc.text('(........................................)', W/2, sigY+23, {align:'center'});
 
-  // Footer
-  doc.setFillColor(240,245,255);
-  doc.rect(0,278,210,20,'F');
-  doc.setTextColor(100,120,150); doc.setFontSize(7);
-  doc.text('QuoteFlow Business Suite  •  ' + new Date().toLocaleDateString('th-TH'), 105, 287, {align:'center'});
+  // ── Footer ────────────────────────────────────────────
+  doc.setFillColor(240,245,252);
+  doc.rect(0,279,W,18,'F');
+  doc.setFontSize(7); doc.setTextColor(120,140,170);
+  doc.text('QuoteFlow Business Suite  •  '+new Date().toLocaleDateString('th-TH'), W/2, 287, {align:'center'});
 
-  doc.save('QT-' + (qt.id||'') + '.pdf');
+  doc.save('QT-'+(qt.id||'quotation')+'.pdf');
 }
 
-// ── SHARE ──────────────────────────────────────────────────
-function shareQuotation(qt) {
-  var text = '📋 '+(qt.id||'')+'\n👤 '+(qt.customerName||'')+'\n💰 '+baht(qt.total)+'\n📅 '+fmtDate(qt.createdAt);
-  if (navigator.share) { navigator.share({title:'QT '+(qt.id||''),text:text}); }
-  else { navigator.clipboard.writeText(text).then(function(){toast('คัดลอกแล้ว!','info');}); }
+function shareQuotation(qt){
+  var text='📋 '+(qt.id||'')+'\n👤 '+(qt.customerName||'')+'\n💰 '+baht(qt.total)+'\n📅 '+fmtDate(qt.createdAt);
+  if(navigator.share){navigator.share({title:'QT '+(qt.id||''),text:text});}
+  else{navigator.clipboard.writeText(text).then(function(){toast('คัดลอกแล้ว!','info');});}
 }
 
-// ── EXPOSE ─────────────────────────────────────────────────
-window.QuoteFlow = {
-  api, getUser, setUser, logout, requireAuth, googleSignIn,
-  baht, fmtDate, shortId, toast, openModal, closeModal,
-  exportQuotationPDF, shareQuotation,
+window.QuoteFlow={
+  api,getUser,setUser,logout,requireAuth,googleSignIn,
+  baht,fmtDate,shortId,toast,openModal,closeModal,
+  exportQuotationPDF,shareQuotation,
 };
