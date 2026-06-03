@@ -1,226 +1,71 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>QuoteFlow – เข้าสู่ระบบ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: 'Prompt', sans-serif;
-  min-height: 100vh;
-  background: #eef3fb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-/* Background blobs */
-.blob {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: .14;
-  pointer-events: none;
-}
-.blob1 { width: 500px; height: 500px; background: #3b82f6; top: -150px; left: -100px; }
-.blob2 { width: 400px; height: 400px; background: #0ea5e9; bottom: -120px; right: -80px; }
-.blob3 { width: 300px; height: 300px; background: #8b5cf6; top: 40%; left: 15%; animation: drift 10s ease-in-out infinite alternate; }
-@keyframes drift { to { transform: translate(20px, -15px); } }
-
-/* Card */
-.card {
-  position: relative; z-index: 1;
-  width: 100%; max-width: 420px;
-  background: rgba(255,255,255,.95);
-  border: 1px solid #d4e2f4;
-  border-radius: 24px;
-  padding: 44px 40px 36px;
-  box-shadow: 0 8px 40px rgba(59,130,246,.14), 0 2px 8px rgba(0,0,0,.06);
-  text-align: center;
-}
-
-/* Logo */
-.logo-mark {
-  width: 56px; height: 56px; border-radius: 16px;
-  background: linear-gradient(135deg, #3b82f6, #60a5fa);
-  box-shadow: 0 6px 20px rgba(59,130,246,.36);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 26px; margin: 0 auto 16px;
-}
-.logo-text { font-size: 28px; font-weight: 700; color: #1e3a5f; letter-spacing: -.4px; }
-.logo-sub  { font-size: 13px; color: #93aed4; font-weight: 300; margin-top: 4px; margin-bottom: 32px; }
-
-/* Status messages */
-.status-box {
-  margin-bottom: 16px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 13px;
-  display: none;
-}
-.status-box.show { display: block; }
-.status-info  { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
-.status-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-.status-ok    { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
-
-/* Google button area */
-#googleBtn {
-  display: flex;
-  justify-content: center;
-  min-height: 44px;
-  margin-bottom: 8px;
-}
-
-/* Divider */
-.divider {
-  display: flex; align-items: center; gap: 12px;
-  color: #93aed4; font-size: 11px; margin: 20px 0;
-}
-.divider::before, .divider::after {
-  content: ''; flex: 1; height: 1px; background: #d4e2f4;
-}
-
-/* Features */
-.features { text-align: left; display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
-.feat {
-  display: flex; align-items: center; gap: 10px;
-  font-size: 13px; color: #4a6fa5;
-}
-.feat-icon {
-  width: 30px; height: 30px; border-radius: 8px;
-  background: linear-gradient(135deg, #dbeafe, #eff6ff);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 15px; flex-shrink: 0;
-}
-
-/* Footer */
-.footer { margin-top: 24px; font-size: 11px; color: #93aed4; }
-
-/* Debug section (hidden normally) */
-.debug {
-  margin-top: 16px;
-  font-size: 11px;
-  color: #93aed4;
-  display: none;
-}
-.debug.show { display: block; }
-.debug-url {
-  background: #f1f5f9;
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-family: monospace;
-  font-size: 10px;
-  word-break: break-all;
-  color: #475569;
-  margin-top: 4px;
-}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Prompt',sans-serif;min-height:100vh;background:#eef3fb;display:flex;align-items:center;justify-content:center;padding:20px;}
+.blob{position:fixed;border-radius:50%;filter:blur(80px);opacity:.14;pointer-events:none;}
+.b1{width:500px;height:500px;background:#3b82f6;top:-150px;left:-100px;}
+.b2{width:400px;height:400px;background:#0ea5e9;bottom:-120px;right:-80px;}
+.card{position:relative;z-index:1;width:100%;max-width:420px;background:rgba(255,255,255,.95);border:1px solid #d4e2f4;border-radius:24px;padding:44px 40px 36px;box-shadow:0 8px 40px rgba(59,130,246,.14);text-align:center;}
+.logo-mark{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#3b82f6,#60a5fa);box-shadow:0 6px 20px rgba(59,130,246,.36);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 16px;}
+.logo-text{font-size:28px;font-weight:700;color:#1e3a5f;}
+.logo-sub{font-size:13px;color:#93aed4;font-weight:300;margin-top:4px;margin-bottom:32px;}
+.status-box{margin-bottom:16px;padding:10px 14px;border-radius:10px;font-size:13px;display:none;}
+.status-box.show{display:block;}
+.s-info{background:#dbeafe;color:#1e40af;border:1px solid #93c5fd;}
+.s-ok{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7;}
+.s-err{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;}
+#googleBtn{display:flex;justify-content:center;min-height:44px;margin-bottom:8px;}
+.divider{display:flex;align-items:center;gap:12px;color:#93aed4;font-size:11px;margin:20px 0;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#d4e2f4;}
+.features{text-align:left;display:flex;flex-direction:column;gap:10px;margin-top:20px;}
+.feat{display:flex;align-items:center;gap:10px;font-size:13px;color:#4a6fa5;}
+.feat-ic{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#dbeafe,#eff6ff);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.footer{margin-top:20px;font-size:11px;color:#93aed4;}
 </style>
 </head>
 <body>
-<div class="blob blob1"></div>
-<div class="blob blob2"></div>
-<div class="blob blob3"></div>
-
+<div class="blob b1"></div>
+<div class="blob b2"></div>
 <div class="card">
   <div class="logo-mark">📋</div>
   <div class="logo-text">QuoteFlow</div>
   <div class="logo-sub">ระบบจัดการใบเสนอราคาและการเงิน</div>
-
-  <!-- Status -->
-  <div class="status-box status-info show" id="statusBox">
-    ⏳ กำลังโหลดระบบ Login...
-  </div>
-
-  <!-- Google Sign-In button -->
+  <div class="status-box s-info show" id="statusBox">⏳ กำลังโหลดระบบ Login...</div>
   <div id="googleBtn"></div>
-
   <div class="divider">ฟีเจอร์หลัก</div>
-
   <div class="features">
-    <div class="feat"><div class="feat-icon">📋</div><span>ออกใบเสนอราคา Export PDF + Share</span></div>
-    <div class="feat"><div class="feat-icon">⚡</div><span>ติดตาม Active Order & Timeline การผลิต</span></div>
-    <div class="feat"><div class="feat-icon">💰</div><span>บันทึกรายรับ-รายจ่ายรายเดือน</span></div>
-    <div class="feat"><div class="feat-icon">👷</div><span>จัดการค่าแรงพนักงาน & ช่างนอก</span></div>
-    <div class="feat"><div class="feat-icon">📊</div><span>Dashboard สรุปข้อมูลครบทุก Function</span></div>
+    <div class="feat"><div class="feat-ic">📋</div><span>ออกใบเสนอราคา Export PDF + Share</span></div>
+    <div class="feat"><div class="feat-ic">⚡</div><span>ติดตาม Active Order & Timeline การผลิต</span></div>
+    <div class="feat"><div class="feat-ic">💰</div><span>บันทึกรายรับ-รายจ่ายรายเดือน</span></div>
+    <div class="feat"><div class="feat-ic">👷</div><span>จัดการค่าแรงพนักงาน & ช่างนอก</span></div>
+    <div class="feat"><div class="feat-ic">📊</div><span>Dashboard สรุปครบทุก Function</span></div>
   </div>
-
-  <!-- Debug info (แสดงเมื่อมีปัญหา) -->
-  <div class="debug" id="debugBox">
-    <div>Client ID ที่ใช้:</div>
-    <div class="debug-url" id="debugClientId"></div>
-  </div>
-
   <p class="footer">การเข้าสู่ระบบถือว่าท่านยอมรับเงื่อนไขการใช้งาน</p>
 </div>
-
-<!-- Google Identity Services -->
-<script src="https://accounts.google.com/gsi/client" async defer
-  onload="onGsiLoaded()"
-  onerror="onGsiError()">
-</script>
+<script src="https://accounts.google.com/gsi/client" async defer onload="onGsiLoaded()" onerror="onGsiError()"></script>
 <script src="assets/app.js"></script>
 <script>
-// ── ถ้า Login อยู่แล้ว ไปหน้า Dashboard เลย ──────────────
-(function checkExistingLogin() {
-  try {
-    const u = JSON.parse(localStorage.getItem('qf_user') || 'null');
-    if (u && u.email) {
-      window.location.replace('dashboard.html');
-    }
-  } catch(e) {}
-})();
-
-const statusBox = document.getElementById('statusBox');
-const debugBox  = document.getElementById('debugBox');
-const debugId   = document.getElementById('debugClientId');
-
-function showStatus(msg, type) {
-  statusBox.textContent = msg;
-  statusBox.className   = 'status-box show status-' + type;
-}
-
-// แสดง Client ID ใน debug
-if (debugId && window.QuoteFlow) {
-  debugId.textContent = CONFIG ? CONFIG.GOOGLE_CLIENT_ID : 'ไม่พบ CONFIG';
-}
-
-// ── GSI โหลดสำเร็จ ────────────────────────────────────────
-function onGsiLoaded() {
-  showStatus('✅ ระบบพร้อมแล้ว กรุณา Login ด้วย Google', 'info');
-
-  QuoteFlow.googleSignIn(function(user) {
-    showStatus('✅ Login สำเร็จ! กำลังเข้าสู่ระบบ...', 'ok');
-    setTimeout(() => {
-      window.location.replace('dashboard.html');
-    }, 800);
+(function(){try{var u=JSON.parse(localStorage.getItem('qf_user')||'null');if(u&&u.email)window.location.replace('dashboard.html');}catch(e){}}());
+var sb=document.getElementById('statusBox');
+function show(msg,cls){sb.textContent=msg;sb.className='status-box show '+cls;}
+function onGsiLoaded(){
+  show('✅ ระบบพร้อม กรุณา Login ด้วย Google','s-info');
+  QuoteFlow.googleSignIn(function(user){
+    show('✅ Login สำเร็จ! กำลังเข้าสู่ระบบ...','s-ok');
+    setTimeout(function(){window.location.replace('dashboard.html');},800);
   });
 }
-
-// ── GSI โหลดไม่ได้ ────────────────────────────────────────
-function onGsiError() {
-  showStatus(
-    '❌ ไม่สามารถโหลด Google Login ได้ กรุณาตรวจสอบ Internet และลอง Refresh หน้า',
-    'error'
-  );
-  debugBox.classList.add('show');
-}
-
-// ── Timeout ถ้า GSI ไม่ตอบใน 8 วินาที ────────────────────
-setTimeout(() => {
-  if (document.getElementById('googleBtn').children.length === 0) {
-    // ยังไม่มีปุ่ม = GSI ยังไม่โหลด
-    showStatus(
-      '⚠️ Google Login โหลดช้า ลอง Refresh หน้าใหม่ หรือตรวจสอบ Client ID',
-      'error'
-    );
-    debugBox.classList.add('show');
-    if (debugId) debugId.textContent = (typeof CONFIG !== 'undefined' ? CONFIG.GOOGLE_CLIENT_ID : 'CONFIG ไม่พบ');
-  }
-}, 8000);
+function onGsiError(){show('❌ โหลด Google Login ไม่ได้ กรุณา Refresh','s-err');}
+setTimeout(function(){
+  if(document.getElementById('googleBtn').children.length===0)
+    show('⚠️ Google Login โหลดช้า ลอง Refresh หน้า','s-err');
+},8000);
 </script>
 </body>
 </html>
