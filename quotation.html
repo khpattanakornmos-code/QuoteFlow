@@ -218,8 +218,11 @@ function saveQuotation(status){
   if(!items.length){QuoteFlow.toast('กรุณาเพิ่มรายการอย่างน้อย 1 รายการ','error');return;}
   var sub=items.reduce(function(s,i){return s+i.qty*i.price;},0);
   var vat=document.getElementById('vatCheck').checked?sub*0.07:0;
-  var data={customerName:cn,note:document.getElementById('qtNote').value.trim(),items:items,subtotal:sub,vat:vat,total:sub+vat,status:status};
   var editId=document.getElementById('editId').value;
+  // ✅ เก็บ images ไว้ใน localStorage แยกต่างหาก
+  var imgStore={};
+  items.forEach(function(it,idx){if(it.img&&it.img.length>500)imgStore[idx]=it.img;});
+  var data={customerName:cn,note:document.getElementById('qtNote').value.trim(),items:items,subtotal:sub,vat:vat,total:sub+vat,status:status};
   if(editId)data.id=editId;
   _saving=true;
   document.getElementById('savingOverlay').classList.add('show');
@@ -232,6 +235,11 @@ function saveQuotation(status){
     document.getElementById('btnConfirm').disabled=false;
     if(res.success){
       QuoteFlow.toast(editId?'อัปเดตสำเร็จ! ✅':'สร้างใบสำเร็จ! ✅','success');
+      // ✅ บันทึกรูปลง localStorage ด้วย QT ID
+      var qtId = res.id || editId || '';
+      if(qtId && Object.keys(imgStore).length > 0){
+        try{ localStorage.setItem('qf_img_'+qtId, JSON.stringify(imgStore)); }catch(e){}
+      }
       QuoteFlow.closeModal('qtModal'); resetForm();
       setTimeout(loadQuotations,2800);
     } else {
@@ -282,6 +290,16 @@ function renderGrid(){
 
 function viewQt(id){
   currentQt=null; for(var i=0;i<quotations.length;i++){if(quotations[i].id===id){currentQt=quotations[i];break;}} if(!currentQt)return;
+  // ✅ ดึงรูปจาก localStorage แล้ว merge เข้า items
+  try{
+    var stored=localStorage.getItem('qf_img_'+id);
+    if(stored){
+      var imgStore=JSON.parse(stored);
+      var arr=Array.isArray(currentQt.items)?currentQt.items.slice():[];
+      Object.keys(imgStore).forEach(function(k){if(arr[k])arr[k]=Object.assign({},arr[k],{img:imgStore[k]});});
+      currentQt=Object.assign({},currentQt,{items:arr});
+    }
+  }catch(e){}
   var q=currentQt, items=Array.isArray(q.items)?q.items:[];
   document.getElementById('viewContent').innerHTML=
     '<div class="qt-report-header"><div class="flex-between" style="flex-wrap:wrap;gap:12px;"><div><div style="font-size:12px;opacity:.75;margin-bottom:4px;">ใบเสนอราคา / QUOTATION</div><div style="font-size:22px;font-weight:700;">'+(q.customerName||'-')+'</div></div><div style="text-align:right;"><div style="font-size:18px;font-weight:700;">'+(q.id||'')+'</div><div style="font-size:12px;opacity:.75;margin-top:3px;">📅 '+QuoteFlow.fmtDate(q.createdAt)+'</div><span class="badge badge-'+(q.status||'draft').toLowerCase()+'" style="margin-top:8px;">'+(q.status||'Draft')+'</span></div></div></div>'+
