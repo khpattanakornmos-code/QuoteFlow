@@ -36,6 +36,14 @@ function doGET(action, data, email) {
   if (cached && now - cached.time < READ_CACHE_TTL) {
     return Promise.resolve(JSON.parse(JSON.stringify(cached.value)));
   }
+  var storageKey = 'qf_read_' + encodeURIComponent(cacheKey);
+  try {
+    var stored = JSON.parse(sessionStorage.getItem(storageKey) || 'null');
+    if (stored && now - stored.time < READ_CACHE_TTL) {
+      _readCache[cacheKey] = stored;
+      return Promise.resolve(JSON.parse(JSON.stringify(stored.value)));
+    }
+  } catch(e) {}
   var qs  = 'action='+encodeURIComponent(action)
           + '&email='+encodeURIComponent(email)
           + '&data=' +encodeURIComponent(JSON.stringify(data));
@@ -46,6 +54,7 @@ function doGET(action, data, email) {
         var parsed = JSON.parse(t);
         if (parsed && parsed.success) {
           _readCache[cacheKey] = {time:now,value:parsed};
+          try { sessionStorage.setItem(storageKey, JSON.stringify(_readCache[cacheKey])); } catch(e) {}
         }
         return parsed;
       }
@@ -73,10 +82,23 @@ function doPOST(action, data, email) {
 }
 
 function invalidateCache(action) {
-  if (!action) {_readCache = {}; return;}
+  if (!action) {
+    _readCache = {};
+    try {
+      Object.keys(sessionStorage).forEach(function(k){
+        if (k.indexOf('qf_read_') === 0) sessionStorage.removeItem(k);
+      });
+    } catch(e) {}
+    return;
+  }
   Object.keys(_readCache).forEach(function(k){
     if (k.indexOf(action + '|') === 0) delete _readCache[k];
   });
+  try {
+    Object.keys(sessionStorage).forEach(function(k){
+      if (k.indexOf('qf_read_' + encodeURIComponent(action + '|')) === 0) sessionStorage.removeItem(k);
+    });
+  } catch(e) {}
 }
 
 function stripImg(data) {
