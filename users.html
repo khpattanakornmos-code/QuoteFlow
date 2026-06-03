@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ผู้ใช้ & สิทธิ์ - QuoteFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.role-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
+.role-card{background:var(--card-alt);border:1px solid var(--border2);border-radius:12px;padding:16px;}
+.role-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:5px;}
+.role-desc{font-size:12px;color:var(--text2);line-height:1.65;}
+.perm-row{display:flex;align-items:center;gap:8px;white-space:nowrap;font-size:12px;color:var(--text2);}
+.perm-row input{width:16px;height:16px;accent-color:var(--blue);}
+.user-cell{display:flex;flex-direction:column;gap:2px;min-width:220px;}
+.user-email{font-size:12px;color:var(--text2);}
+.save-state{font-size:12px;color:var(--text3);min-width:74px;}
+@media(max-width:900px){.role-grid{grid-template-columns:1fr;} .perm-row{white-space:normal;}}
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div id="nav-root"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="flex-center gap-12">
+        <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+        <div class="page-title">👥 ผู้ใช้ & สิทธิ์</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-outline btn-sm" onclick="loadUsers()" data-permission-keep="true">🔄 โหลดใหม่</button>
+      </div>
+    </div>
+    <div class="page-body">
+      <div class="role-grid mb-24">
+        <div class="role-card"><div class="role-title">Admin</div><div class="role-desc">เห็นข้อมูลทั้งหมด เพิ่ม/แก้/ลบข้อมูล และจัดการสิทธิ์ผู้ใช้ได้</div></div>
+        <div class="role-card"><div class="role-title">Editor</div><div class="role-desc">เห็นข้อมูลทั้งหมด และเพิ่ม/แก้/ลบข้อมูลได้ แต่จัดการผู้ใช้ไม่ได้</div></div>
+        <div class="role-card"><div class="role-title">Viewer</div><div class="role-desc">เห็นข้อมูลทั้งหมดได้อย่างเดียว เหมาะกับบัญชีที่ต้องการตรวจสอบข้อมูล</div></div>
+      </div>
+
+      <div class="card">
+        <div class="flex-between mb-16" style="flex-wrap:wrap;gap:12px;">
+          <div class="card-title" style="margin:0">รายการผู้ใช้ Google</div>
+          <div class="text-sm text-muted" id="userCount">-</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ผู้ใช้</th>
+                <th>Role</th>
+                <th>สิทธิ์</th>
+                <th style="text-align:right">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody">
+              <tr><td colspan="4"><div class="empty-state"><div class="empty-icon">👥</div><p>กำลังโหลดข้อมูลผู้ใช้...</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script src="assets/nav.js"></script>
+<script>
+QuoteFlow.requireAuth();
+injectSidebar('users');
+
+var users=[];
+var ROLE_DEFAULTS={
+  admin:{canViewAll:true,canEdit:true,canManageUsers:true},
+  editor:{canViewAll:true,canEdit:true,canManageUsers:false},
+  viewer:{canViewAll:true,canEdit:false,canManageUsers:false}
+};
+
+function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function bool(v){return v===true||v==='true'||v===1||v==='1';}
+
+function loadUsers(){
+  if(!QuoteFlow.canManageUsers()){
+    document.getElementById('usersBody').innerHTML='<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">🔒</div><p>บัญชีนี้ไม่มีสิทธิ์จัดการผู้ใช้</p></div></td></tr>';
+    return;
+  }
+  QuoteFlow.invalidateCache('getUsers');
+  QuoteFlow.api('getUsers').then(function(r){
+    users=(r&&r.success&&Array.isArray(r.data))?r.data:[];
+    renderUsers();
+  });
+}
+
+function renderUsers(){
+  document.getElementById('userCount').textContent=users.length+' ผู้ใช้';
+  var body=document.getElementById('usersBody');
+  if(!users.length){
+    body.innerHTML='<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">👥</div><p>ยังไม่มีผู้ใช้</p></div></td></tr>';
+    return;
+  }
+  body.innerHTML=users.map(function(u,i){
+    var role=u.role||'viewer';
+    return '<tr data-index="'+i+'">'+
+      '<td><div class="user-cell"><strong>'+esc(u.name||u.email)+'</strong><span class="user-email">'+esc(u.email)+'</span></div></td>'+
+      '<td><select class="form-input" style="min-width:120px;" onchange="setRole('+i+',this.value)">'+
+        '<option value="admin" '+(role==='admin'?'selected':'')+'>Admin</option>'+
+        '<option value="editor" '+(role==='editor'?'selected':'')+'>Editor</option>'+
+        '<option value="viewer" '+(role==='viewer'?'selected':'')+'>Viewer</option>'+
+      '</select></td>'+
+      '<td><div class="flex-center gap-12" style="flex-wrap:wrap;">'+
+        perm(i,'canViewAll','เห็นทั้งหมด',u.canViewAll)+
+        perm(i,'canEdit','เพิ่ม/แก้/ลบ',u.canEdit)+
+        perm(i,'canManageUsers','จัดการผู้ใช้',u.canManageUsers)+
+      '</div></td>'+
+      '<td style="text-align:right"><div class="flex-center gap-8" style="justify-content:flex-end;"><span class="save-state" id="state-'+i+'"></span><button class="btn btn-primary btn-sm" onclick="saveUser('+i+')">💾 บันทึก</button></div></td>'+
+    '</tr>';
+  }).join('');
+}
+
+function perm(i,key,label,value){
+  return '<label class="perm-row"><input type="checkbox" '+(bool(value)?'checked':'')+' onchange="setPerm('+i+',\''+key+'\',this.checked)"> '+label+'</label>';
+}
+
+function setRole(i,role){
+  users[i].role=role;
+  var d=ROLE_DEFAULTS[role]||ROLE_DEFAULTS.viewer;
+  users[i].canViewAll=d.canViewAll;
+  users[i].canEdit=d.canEdit;
+  users[i].canManageUsers=d.canManageUsers;
+  renderUsers();
+}
+
+function setPerm(i,key,value){
+  users[i][key]=value;
+  document.getElementById('state-'+i).textContent='ยังไม่บันทึก';
+}
+
+function saveUser(i){
+  var u=users[i];
+  document.getElementById('state-'+i).textContent='กำลังบันทึก...';
+  QuoteFlow.api('updateUserPermission',{
+    targetEmail:u.email,
+    role:u.role||'viewer',
+    canViewAll:bool(u.canViewAll),
+    canEdit:bool(u.canEdit),
+    canManageUsers:bool(u.canManageUsers)
+  }).then(function(){
+    var current=QuoteFlow.getUser();
+    if(current&&String(current.email).toLowerCase()===String(u.email).toLowerCase()){
+      QuoteFlow.setUser(Object.assign({},current,u));
+    }
+    document.getElementById('state-'+i).textContent='บันทึกแล้ว';
+    QuoteFlow.toast('อัปเดตสิทธิ์แล้ว','success');
+    setTimeout(loadUsers,700);
+  });
+}
+
+loadUsers();
+</script>
+</body>
+</html>

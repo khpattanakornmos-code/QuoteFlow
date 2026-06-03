@@ -387,6 +387,7 @@ function viewQt(id){
     '<button class="btn btn-danger" onclick="doDelete(\''+q.id+'\')">🗑️ ลบ</button>'+
     '<button class="btn btn-outline" onclick="QuoteFlow.closeModal(\'viewModal\')">ปิด</button>';
   QuoteFlow.openModal('viewModal');
+  QuoteFlow.applyPermissions();
 }
 
 function openActivateModal(){

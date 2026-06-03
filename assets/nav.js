@@ -3,6 +3,8 @@ function injectSidebar(activePage) {
   var initial = ((user&&user.name)?user.name[0]:'U').toUpperCase();
   var name    = (user&&user.name)?user.name:'User';
   var email   = (user&&user.email)?user.email:'';
+  var role    = (user&&user.role)?user.role:'viewer';
+  var canManage = QuoteFlow.canManageUsers && QuoteFlow.canManageUsers();
 
   var sections = [
     {label:'หลัก',items:[{page:'dashboard',href:'dashboard.html',icon:'📊',label:'Dashboard'}]},
@@ -19,6 +21,11 @@ function injectSidebar(activePage) {
       {page:'payroll',href:'payroll.html',icon:'👷',label:'ค่าแรง & เช็คยอด'},
     ]},
   ];
+  if (canManage) {
+    sections.push({label:'ตั้งค่า',items:[
+      {page:'users',href:'users.html',icon:'👥',label:'ผู้ใช้ & สิทธิ์'},
+    ]});
+  }
 
   var navHTML = '';
   sections.forEach(function(sec){
@@ -37,7 +44,7 @@ function injectSidebar(activePage) {
       '<nav style="padding:10px 0;flex:1;overflow-y:auto;">'+navHTML+'</nav>'+
       '<div class="sidebar-user">'+
         '<div class="user-avatar">'+initial+'</div>'+
-        '<div class="user-info"><div class="user-name">'+name+'</div><div class="user-role">'+email+'</div></div>'+
+        '<div class="user-info"><div class="user-name">'+name+'</div><div class="user-role">'+role+' · '+email+'</div></div>'+
         '<button class="logout-btn" onclick="QuoteFlow.logout()" title="ออกจากระบบ">⏻</button>'+
       '</div>'+
     '</aside>';
@@ -49,4 +56,5 @@ function injectSidebar(activePage) {
   var menuBtn  = document.getElementById('mobileMenuBtn');
   if(menuBtn) menuBtn.addEventListener('click',function(){sidebar.classList.toggle('open');backdrop.classList.toggle('open');});
   if(backdrop) backdrop.addEventListener('click',function(){sidebar.classList.remove('open');backdrop.classList.remove('open');});
+  setTimeout(function(){ if(QuoteFlow.applyPermissions) QuoteFlow.applyPermissions(); }, 0);
 }

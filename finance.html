@@ -173,6 +173,7 @@ function renderList(){
       '<button class="btn btn-danger btn-icon btn-sm" onclick="delFin(\''+r.id+'\')">🗑️</button>'+
     '</div>';
   }).join('');
+  QuoteFlow.applyPermissions();
 }
 
 function saveFin(){

@@ -203,6 +203,7 @@ function openTl(qId) {
   document.getElementById('newDueDate').value = o.dueDate?(String(o.dueDate).substring(0,10)):'';
   document.getElementById('customStep').value = '';
   QuoteFlow.openModal('tlModal');
+  QuoteFlow.applyPermissions();
 }
 
 function pickStep(s){document.getElementById('customStep').value=s;}
