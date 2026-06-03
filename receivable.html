@@ -1,69 +1,27 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>ยอดค้างชำระ – QuoteFlow</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <style>
-/* Customer receivable cards */
-.rv-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
-
-.rv-card {
-  background:#fff; border:1px solid var(--border);
-  border-radius:var(--radius); padding:18px 20px;
-  box-shadow:var(--shadow-xs); transition:all var(--t);
-  cursor:pointer; position:relative; overflow:hidden;
-}
-.rv-card:hover { box-shadow:var(--shadow-md); border-color:var(--blue-light); transform:translateY(-2px); }
-.rv-card.overdue { border-left:4px solid var(--red); }
-.rv-card.paid-full { border-left:4px solid var(--green); opacity:.8; }
-
-.rv-customer-avatar {
-  width:40px; height:40px; border-radius:12px;
-  background:var(--blue-grad); color:#fff;
-  font-size:15px; font-weight:700;
-  display:flex; align-items:center; justify-content:center; flex-shrink:0;
-}
-
-/* Payment ring */
-.payment-ring { position:relative; width:52px; height:52px; flex-shrink:0; }
-.payment-ring svg { transform:rotate(-90deg); }
-.ring-label { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--text); }
-
-/* Status chips */
-.rv-status {
-  padding:3px 12px; border-radius:12px; font-size:11px; font-weight:700;
-  display:inline-flex; align-items:center; gap:4px;
-}
-.rv-paid    { background:#d1fae5; color:#065f46; }
-.rv-partial { background:#dbeafe; color:#1e40af; }
-.rv-unpaid  { background:#fee2e2; color:#991b1b; }
-.rv-overdue { background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
-
-/* Filter tab */
-.rv-tab {
-  padding:6px 16px; border-radius:20px; font-size:13px; font-weight:500;
-  border:1.5px solid var(--border); background:#fff; color:var(--text2);
-  cursor:pointer; transition:all var(--t); font-family:var(--font);
-}
-.rv-tab:hover  { border-color:var(--blue); color:var(--blue); background:var(--blue-pale); }
-.rv-tab.active { background:var(--blue-grad); color:#fff; border-color:transparent; box-shadow:var(--shadow-sm); }
-
-/* Payment input panel */
-.pay-panel {
-  background:linear-gradient(135deg,#f0f7ff,#e8f2ff);
-  border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px;
-}
+.rv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.rv-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow-xs);transition:all var(--t);position:relative;}
+.rv-card:hover{box-shadow:var(--shadow-md);border-color:var(--blue-light);}
+.rv-card.overdue{border-left:4px solid var(--red);}
+.rv-card.paid-full{border-left:4px solid var(--green);opacity:.8;}
+.rv-tab{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:500;border:1.5px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;transition:all var(--t);font-family:var(--font);}
+.rv-tab.active{background:var(--blue-grad);color:#fff;border-color:transparent;box-shadow:var(--shadow-sm);}
+.ring-wrap{position:relative;width:52px;height:52px;flex-shrink:0;}
+.ring-lbl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text);}
 </style>
 </head>
 <body>
 <div class="app-layout">
   <div id="nav-root"></div>
   <div class="main-content">
-
     <div class="topbar">
       <div class="flex-center gap-12">
         <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
@@ -71,38 +29,17 @@
       </div>
       <div class="topbar-actions">
         <button class="btn btn-outline btn-sm" onclick="loadRv()">🔄</button>
-        <button class="btn btn-primary" onclick="QuoteFlow.QuoteFlow.openModal('rvAddModal')">+ เพิ่มยอดหนี้</button>
+        <button class="btn btn-primary" onclick="QuoteFlow.openModal('rvAddModal')">+ เพิ่มยอดหนี้</button>
       </div>
     </div>
-
     <div class="page-body">
-
-      <!-- Summary stats -->
       <div class="grid grid-4 mb-24">
-        <div class="card stat-card red">
-          <div class="stat-icon">❌</div>
-          <div class="stat-value" id="st-unpaid">฿0</div>
-          <div class="stat-label">ยังไม่ชำระ</div>
-        </div>
-        <div class="card stat-card blue">
-          <div class="stat-icon">🔵</div>
-          <div class="stat-value" id="st-partial">฿0</div>
-          <div class="stat-label">ชำระบางส่วน</div>
-        </div>
-        <div class="card stat-card green">
-          <div class="stat-icon">✅</div>
-          <div class="stat-value" id="st-paid">฿0</div>
-          <div class="stat-label">ชำระครบแล้ว</div>
-        </div>
-        <div class="card stat-card amber">
-          <div class="stat-icon">⚠️</div>
-          <div class="stat-value" id="st-overdue">0</div>
-          <div class="stat-label">เกินกำหนด (ราย)</div>
-        </div>
+        <div class="card stat-card red"><div class="stat-icon">❌</div><div class="stat-value" id="st-unpaid">฿0</div><div class="stat-label">ยังไม่ชำระ</div></div>
+        <div class="card stat-card blue"><div class="stat-icon">🔵</div><div class="stat-value" id="st-partial">฿0</div><div class="stat-label">ชำระบางส่วน</div></div>
+        <div class="card stat-card green"><div class="stat-icon">✅</div><div class="stat-value" id="st-paid">฿0</div><div class="stat-label">ชำระครบ</div></div>
+        <div class="card stat-card amber"><div class="stat-icon">⚠️</div><div class="stat-value" id="st-overdue">0</div><div class="stat-label">เกินกำหนด (ราย)</div></div>
       </div>
-
-      <!-- Search + filter -->
-      <div class="card mb-20" style="padding:14px 18px;">
+      <div class="card mb-20" style="padding:12px 16px;">
         <div class="flex-between" style="flex-wrap:wrap;gap:12px;">
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
             <button class="rv-tab active" data-f="all">ทั้งหมด</button>
@@ -111,101 +48,62 @@
             <button class="rv-tab" data-f="Paid">✅ ชำระแล้ว</button>
             <button class="rv-tab" data-f="overdue">⚠️ เกินกำหนด</button>
           </div>
-          <div style="position:relative;">
-            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);">🔍</span>
-            <input class="form-input" id="rvSearch" placeholder="ค้นหาลูกค้า..." style="padding-left:36px;min-width:200px;">
-          </div>
+          <input class="form-input" id="rvSearch" placeholder="🔍 ค้นหาลูกค้า..." style="max-width:200px;">
         </div>
       </div>
-
-      <!-- Cards -->
       <div class="rv-grid" id="rvGrid"></div>
-
     </div>
   </div>
 </div>
 
-<!-- ═══ ADD MODAL ═════════════════════════════════════════ -->
+<!-- ADD MODAL -->
 <div class="modal-overlay" id="rvAddModal">
   <div class="modal modal-sm">
     <div class="modal-header">
       <div class="modal-title">📌 เพิ่มยอดหนี้ลูกค้า</div>
-      <button class="modal-close" onclick="QuoteFlow.QuoteFlow.closeModal('rvAddModal')">✕</button>
+      <button class="modal-close" onclick="QuoteFlow.closeModal('rvAddModal')">✕</button>
     </div>
-    <div class="form-group mb-14">
-      <label class="form-label">ชื่อลูกค้า *</label>
-      <input class="form-input" id="rvCustomer" placeholder="ชื่อลูกค้า / บริษัท">
+    <div class="form-group mb-12"><label class="form-label">ชื่อลูกค้า *</label><input class="form-input" id="rvCust" placeholder="ชื่อลูกค้า / บริษัท"></div>
+    <div class="form-group mb-12"><label class="form-label">เลขใบ QT (ถ้ามี)</label><input class="form-input" id="rvQtId" placeholder="QT-XXXXXXXX"></div>
+    <div class="form-row form-row-2 mb-12">
+      <div class="form-group"><label class="form-label">ยอดรวม (บาท) *</label><input type="number" class="form-input" id="rvAmount" placeholder="0.00" min="0"></div>
+      <div class="form-group"><label class="form-label">ชำระแล้ว (บาท)</label><input type="number" class="form-input" id="rvPaid" placeholder="0.00" min="0" value="0"></div>
     </div>
-    <div class="form-group mb-14">
-      <label class="form-label">เลขใบเสนอราคา (ถ้ามี)</label>
-      <input class="form-input" id="rvQtId" placeholder="QT-XXXXXXXX">
-    </div>
-    <div class="form-row form-row-2 mb-14">
-      <div class="form-group">
-        <label class="form-label">ยอดรวม (บาท) *</label>
-        <input type="number" class="form-input" id="rvAmount" placeholder="0.00" min="0" step="0.01">
-      </div>
-      <div class="form-group">
-        <label class="form-label">ชำระแล้ว (บาท)</label>
-        <input type="number" class="form-input" id="rvPaid" placeholder="0.00" min="0" step="0.01" value="0">
-      </div>
-    </div>
-    <div class="form-group mb-14">
-      <label class="form-label">กำหนดชำระ</label>
-      <input type="date" class="form-input" id="rvDue">
-    </div>
-    <div class="form-group mb-20">
-      <label class="form-label">หมายเหตุ</label>
-      <input class="form-input" id="rvNote" placeholder="หมายเหตุเพิ่มเติม...">
-    </div>
+    <div class="form-group mb-12"><label class="form-label">กำหนดชำระ</label><input type="date" class="form-input" id="rvDue"></div>
+    <div class="form-group mb-20"><label class="form-label">หมายเหตุ</label><input class="form-input" id="rvNote" placeholder="หมายเหตุ..."></div>
     <div class="flex-center gap-10" style="justify-content:flex-end;">
-      <button class="btn btn-outline" onclick="QuoteFlow.QuoteFlow.closeModal('rvAddModal')">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="saveRv()">💾 บันทึก</button>
+      <button class="btn btn-outline" onclick="QuoteFlow.closeModal('rvAddModal')">ยกเลิก</button>
+      <button class="btn btn-primary" id="btnSaveRv" onclick="saveRv()">💾 บันทึก</button>
     </div>
   </div>
 </div>
 
-<!-- ═══ PAYMENT UPDATE MODAL ════════════════════════════ -->
+<!-- PAYMENT MODAL -->
 <div class="modal-overlay" id="payUpdateModal">
   <div class="modal modal-sm">
     <div class="modal-header">
       <div class="modal-title">💳 อัปเดตการรับชำระ</div>
-      <button class="modal-close" onclick="QuoteFlow.QuoteFlow.closeModal('payUpdateModal')">✕</button>
+      <button class="modal-close" onclick="QuoteFlow.closeModal('payUpdateModal')">✕</button>
     </div>
     <input type="hidden" id="pId">
-
-    <div class="pay-panel mb-20">
+    <div style="background:var(--blue-pale);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;">
       <div style="font-size:13px;color:var(--text2);margin-bottom:4px;">ลูกค้า</div>
-      <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;" id="pName">-</div>
-      <div class="flex-between">
-        <div>
-          <div style="font-size:11px;color:var(--text3);">ยอดรวม</div>
-          <div style="font-size:15px;font-weight:600;" id="pTotal">฿0</div>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--text3);">จ่ายแล้ว</div>
-          <div style="font-size:15px;font-weight:600;color:var(--green);" id="pPaidSoFar">฿0</div>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--text3);">คงค้าง</div>
-          <div style="font-size:15px;font-weight:600;color:var(--red);" id="pBalance">฿0</div>
-        </div>
+      <div style="font-size:18px;font-weight:700;" id="pName"></div>
+      <div class="flex-between mt-8">
+        <div><div style="font-size:11px;color:var(--text3);">ยอดรวม</div><div style="font-size:15px;font-weight:600;" id="pTotal"></div></div>
+        <div><div style="font-size:11px;color:var(--text3);">จ่ายแล้ว</div><div style="font-size:15px;font-weight:600;color:var(--green);" id="pPaid"></div></div>
+        <div><div style="font-size:11px;color:var(--text3);">คงค้าง</div><div style="font-size:15px;font-weight:600;color:var(--red);" id="pBal"></div></div>
       </div>
     </div>
-
-    <div class="form-group mb-14">
-      <label class="form-label">ยอดที่รับชำระแล้วรวม (บาท)</label>
-      <input type="number" class="form-input" id="pNewPaid" placeholder="0.00" min="0" step="0.01" style="font-size:18px;font-weight:600;" oninput="updatePayPreview()">
-      <div style="font-size:12px;color:var(--text3);margin-top:4px;" id="payPreview"></div>
+    <div class="form-group mb-12">
+      <label class="form-label">ยอดที่ชำระแล้วรวม (บาท)</label>
+      <input type="number" class="form-input" id="pNewPaid" min="0" style="font-size:18px;font-weight:600;" oninput="updatePreview()">
+      <div style="font-size:12px;margin-top:4px;" id="payPreview"></div>
     </div>
-    <div class="form-group mb-20">
-      <label class="form-label">หมายเหตุ</label>
-      <input class="form-input" id="pNote" placeholder="หมายเหตุ...">
-    </div>
-
+    <div class="form-group mb-20"><label class="form-label">หมายเหตุ</label><input class="form-input" id="pNote"></div>
     <div class="flex-center gap-10" style="justify-content:flex-end;">
-      <button class="btn btn-outline" onclick="QuoteFlow.QuoteFlow.closeModal('payUpdateModal')">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="updatePay()">✅ บันทึกการรับชำระ</button>
+      <button class="btn btn-outline" onclick="QuoteFlow.closeModal('payUpdateModal')">ยกเลิก</button>
+      <button class="btn btn-primary" id="btnUpdatePay" onclick="updatePay()">✅ บันทึก</button>
     </div>
   </div>
 </div>
@@ -216,172 +114,135 @@
 QuoteFlow.requireAuth();
 injectSidebar('receivable');
 
-let rvData     = [];
-let filterMode = 'all';
-let curRv      = null;
+var rvData = [];
+var filterMode = 'all';
+var curRv = null;
+var _saving = false;
 
-async function loadRv() {
-  const res = await QuoteFlow.api('getReceivables');
-  if (!res.success) return;
-  rvData = res.data;
-  const today = new Date();
-
-  const unpaid  = rvData.filter(r=>r.status==='Unpaid').reduce((s,r)=>s+Number(r.balance),0);
-  const partial = rvData.filter(r=>r.status==='Partial').reduce((s,r)=>s+Number(r.balance),0);
-  const paid    = rvData.filter(r=>r.status==='Paid').reduce((s,r)=>s+Number(r.amount),0);
-  const overdue = rvData.filter(r=>r.status!=='Paid'&&r.dueDate&&new Date(r.dueDate)<today).length;
-
-  document.getElementById('st-unpaid').textContent  = QuoteFlow.baht(unpaid);
-  document.getElementById('st-partial').textContent = QuoteFlow.baht(partial);
-  document.getElementById('st-paid').textContent    = QuoteFlow.baht(paid);
-  document.getElementById('st-overdue').textContent = overdue;
-
-  renderCards();
+function loadRv(){
+  QuoteFlow.api('getReceivables').then(function(res){
+    if(!res.success)return;
+    rvData=res.data||[];
+    var today=new Date();
+    var unpaid  = rvData.filter(function(r){return r.status==='Unpaid';}).reduce(function(s,r){return s+Number(r.balance||0);},0);
+    var partial = rvData.filter(function(r){return r.status==='Partial';}).reduce(function(s,r){return s+Number(r.balance||0);},0);
+    var paid    = rvData.filter(function(r){return r.status==='Paid';}).reduce(function(s,r){return s+Number(r.amount||0);},0);
+    var overdue = rvData.filter(function(r){return r.status!=='Paid'&&r.dueDate&&new Date(r.dueDate)<today;}).length;
+    document.getElementById('st-unpaid').textContent  = QuoteFlow.baht(unpaid);
+    document.getElementById('st-partial').textContent = QuoteFlow.baht(partial);
+    document.getElementById('st-paid').textContent    = QuoteFlow.baht(paid);
+    document.getElementById('st-overdue').textContent = overdue;
+    renderCards();
+  });
 }
 
-function renderCards() {
-  const search = document.getElementById('rvSearch').value.toLowerCase();
-  const today  = new Date();
-  let list = rvData.filter(r => {
-    const ms  = search ? (r.customerName||'').toLowerCase().includes(search) : true;
-    const mf  = filterMode==='all' ? true :
-                filterMode==='overdue' ? (r.status!=='Paid'&&r.dueDate&&new Date(r.dueDate)<today) :
-                r.status===filterMode;
-    return ms && mf;
-  }).sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
-
-  const el = document.getElementById('rvGrid');
-  if (!list.length) {
-    el.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📌</div><p>ยังไม่มีรายการ</p></div>';
-    return;
-  }
-
-  el.innerHTML = list.map(r => {
-    const bal      = Number(r.balance);
-    const total    = Number(r.amount);
-    const paid     = Number(r.paidAmount);
-    const pct      = total > 0 ? Math.round(paid / total * 100) : 0;
-    const overdue  = r.status!=='Paid' && r.dueDate && new Date(r.dueDate) < today;
-    const due_diff = r.dueDate ? Math.ceil((new Date(r.dueDate)-today)/86400000) : null;
-    const initial  = (r.customerName||'?')[0].toUpperCase();
-
-    let statusEl = '';
-    if (r.status==='Paid')         statusEl = '<span class="rv-status rv-paid">✅ ชำระครบ</span>';
-    else if (overdue)              statusEl = '<span class="rv-status rv-overdue">⚠️ เกินกำหนด</span>';
-    else if (r.status==='Partial') statusEl = '<span class="rv-status rv-partial">🔵 บางส่วน</span>';
-    else                           statusEl = '<span class="rv-status rv-unpaid">❌ ยังไม่ชำระ</span>';
-
-    // Ring SVG
-    const circ = 2 * Math.PI * 20;
-    const dash  = (pct / 100) * circ;
-    const ringColor = r.status==='Paid' ? '#10b981' : overdue ? '#ef4444' : r.status==='Partial' ? '#3b82f6' : '#d4e2f4';
-
-    return `
-    <div class="rv-card ${overdue?'overdue':''} ${r.status==='Paid'?'paid-full':''}" onclick="${r.status!=='Paid'?`openPay('${r.id}')`:''}"">
-      <div class="flex-between mb-12">
-        <div class="flex-center gap-10">
-          <div class="rv-customer-avatar">${initial}</div>
-          <div>
-            <div style="font-weight:600;font-size:14px;color:var(--text);">${r.customerName||'-'}</div>
-            <div style="font-size:11px;color:var(--text3);">${r.quotationId||'–'}</div>
-          </div>
-        </div>
-        <div class="payment-ring">
-          <svg width="52" height="52" viewBox="0 0 52 52">
-            <circle cx="26" cy="26" r="20" fill="none" stroke="#f0f4ff" stroke-width="6"/>
-            <circle cx="26" cy="26" r="20" fill="none" stroke="${ringColor}" stroke-width="6"
-              stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}"
-              stroke-linecap="round"/>
-          </svg>
-          <div class="ring-label">${pct}%</div>
-        </div>
-      </div>
-
-      <div style="margin-bottom:10px;">
-        <div style="font-size:22px;font-weight:700;color:${bal>0?'var(--red)':'var(--green)'};">${QuoteFlow.baht(bal)}</div>
-        <div style="font-size:11px;color:var(--text3);">คงค้าง จากยอดรวม ${QuoteFlow.baht(total)}</div>
-      </div>
-
-      <div class="flex-between">
-        <div style="display:flex;flex-direction:column;gap:3px;">
-          ${statusEl}
-          ${r.dueDate && r.status!=='Paid' ? `
-            <span style="font-size:11px;color:${overdue?'var(--red)':due_diff<=3?'var(--amber)':'var(--text3)'};">
-              📅 ${overdue?`เกิน ${Math.abs(due_diff)} วัน`:`กำหนด ${QuoteFlow.fmtDate(r.dueDate)}`}
-            </span>` : ''}
-        </div>
-        ${r.status!=='Paid' ? `
-          <button class="btn btn-green btn-sm" onclick="event.stopPropagation();openPay('${r.id}')">
-            💳 รับชำระ
-          </button>` : ''}
-      </div>
-    </div>`;
+function renderCards(){
+  var search=document.getElementById('rvSearch').value.toLowerCase();
+  var today=new Date();
+  var list=rvData.filter(function(r){
+    var ms=search?(r.customerName||'').toLowerCase().indexOf(search)>=0:true;
+    var mf=filterMode==='all'?true:filterMode==='overdue'?(r.status!=='Paid'&&r.dueDate&&new Date(r.dueDate)<today):(r.status===filterMode);
+    return ms&&mf;
+  });
+  var el=document.getElementById('rvGrid');
+  if(!list.length){el.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📌</div><p>ยังไม่มีรายการ</p></div>';return;}
+  el.innerHTML=list.map(function(r){
+    var bal=Number(r.balance||0), total=Number(r.amount||0), paid2=Number(r.paidAmount||0);
+    var pct=total>0?Math.round(paid2/total*100):0;
+    var overdue=r.status!=='Paid'&&r.dueDate&&new Date(r.dueDate)<today;
+    var init=(r.customerName||'?')[0].toUpperCase();
+    var circ=2*Math.PI*20, dash=(pct/100)*circ;
+    var ringColor=r.status==='Paid'?'#10b981':overdue?'#ef4444':r.status==='Partial'?'#3b82f6':'#d4e2f4';
+    return '<div class="rv-card '+(overdue?'overdue':r.status==='Paid'?'paid-full':'')+'">'+
+      '<div class="flex-between mb-12">'+
+        '<div class="flex-center gap-10">'+
+          '<div style="width:40px;height:40px;border-radius:12px;background:var(--blue-grad);color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;">'+init+'</div>'+
+          '<div><div style="font-weight:600;font-size:14px;">'+(r.customerName||'-')+'</div><div style="font-size:11px;color:var(--text3);">'+(r.quotationId||'–')+'</div></div>'+
+        '</div>'+
+        '<div class="ring-wrap">'+
+          '<svg width="52" height="52" viewBox="0 0 52 52"><circle cx="26" cy="26" r="20" fill="none" stroke="#f0f4ff" stroke-width="6"/><circle cx="26" cy="26" r="20" fill="none" stroke="'+ringColor+'" stroke-width="6" stroke-dasharray="'+dash.toFixed(1)+' '+circ.toFixed(1)+'" stroke-linecap="round" transform="rotate(-90 26 26)"/></svg>'+
+          '<div class="ring-lbl">'+pct+'%</div>'+
+        '</div>'+
+      '</div>'+
+      '<div style="font-size:22px;font-weight:700;color:'+(bal>0?'var(--red)':'var(--green)')+';">'+QuoteFlow.baht(bal)+'</div>'+
+      '<div style="font-size:11px;color:var(--text3);">คงค้าง จากยอดรวม '+QuoteFlow.baht(total)+'</div>'+
+      '<div class="flex-between mt-12">'+
+        '<div>'+
+          '<span class="badge '+(r.status==='Paid'?'badge-paid':r.status==='Partial'?'badge-partial':'badge-unpaid')+'">'+(r.status==='Paid'?'✅ ชำระครบ':overdue?'⚠️ เกินกำหนด':r.status==='Partial'?'🔵 บางส่วน':'❌ ยังไม่ชำระ')+'</span>'+
+          (r.dueDate&&r.status!=='Paid'?'<div style="font-size:11px;color:'+(overdue?'var(--red)':'var(--text3)')+';">📅 '+QuoteFlow.fmtDate(r.dueDate)+'</div>':'')+
+        '</div>'+
+        (r.status!=='Paid'?'<button class="btn btn-green btn-sm" onclick="openPay(\''+r.id+'\')">💳 รับชำระ</button>':'')+
+      '</div>'+
+    '</div>';
   }).join('');
 }
 
-function openPay(id) {
-  curRv = rvData.find(r => r.id === id); if (!curRv) return;
-  document.getElementById('pId').value       = id;
-  document.getElementById('pName').textContent      = curRv.customerName;
-  document.getElementById('pTotal').textContent     = QuoteFlow.baht(curRv.amount);
-  document.getElementById('pPaidSoFar').textContent = QuoteFlow.baht(curRv.paidAmount);
-  document.getElementById('pBalance').textContent   = QuoteFlow.baht(curRv.balance);
-  document.getElementById('pNewPaid').value  = curRv.paidAmount || 0;
-  document.getElementById('pNote').value     = curRv.note || '';
-  document.getElementById('payPreview').textContent = '';
+function openPay(id){
+  curRv=null; for(var i=0;i<rvData.length;i++){if(rvData[i].id===id){curRv=rvData[i];break;}}
+  if(!curRv)return;
+  document.getElementById('pId').value     = id;
+  document.getElementById('pName').textContent = curRv.customerName;
+  document.getElementById('pTotal').textContent = QuoteFlow.baht(curRv.amount);
+  document.getElementById('pPaid').textContent  = QuoteFlow.baht(curRv.paidAmount);
+  document.getElementById('pBal').textContent   = QuoteFlow.baht(curRv.balance);
+  document.getElementById('pNewPaid').value = curRv.paidAmount||0;
+  document.getElementById('pNote').value    = curRv.note||'';
+  document.getElementById('payPreview').textContent='';
   QuoteFlow.openModal('payUpdateModal');
 }
 
-function updatePayPreview() {
-  if (!curRv) return;
-  const newPaid = Number(document.getElementById('pNewPaid').value||0);
-  const bal = Number(curRv.amount) - newPaid;
-  const el  = document.getElementById('payPreview');
-  el.textContent = bal <= 0 ? '✅ ชำระครบแล้ว!' : `คงค้างอีก ${QuoteFlow.baht(Math.max(0,bal))}`;
-  el.style.color = bal <= 0 ? 'var(--green)' : 'var(--red)';
+function updatePreview(){
+  if(!curRv)return;
+  var np=Number(document.getElementById('pNewPaid').value||0);
+  var bal=Number(curRv.amount)-np;
+  var el=document.getElementById('payPreview');
+  el.textContent=bal<=0?'✅ ชำระครบแล้ว!':'คงค้างอีก '+QuoteFlow.baht(Math.max(0,bal));
+  el.style.color=bal<=0?'var(--green)':'var(--red)';
 }
 
-async function updatePay() {
-  const id      = document.getElementById('pId').value;
-  const paid    = Number(document.getElementById('pNewPaid').value||0);
-  const note    = document.getElementById('pNote').value;
-  const res = await QuoteFlow.api('updateReceivable', { id, paidAmount: paid, note });
-  if (res.success) { QuoteFlow.toast('อัปเดตสำเร็จ! 🎉', 'success'); QuoteFlow.closeModal('payUpdateModal'); loadRv(); }
-}
-
-async function saveRv() {
-  const cn  = document.getElementById('rvCustomer').value.trim();
-  const amt = Number(document.getElementById('rvAmount').value);
-  if (!cn)     return QuoteFlow.toast('กรุณาใส่ชื่อลูกค้า', 'error');
-  if (!amt||amt<=0) return QuoteFlow.toast('กรุณาใส่ยอดเงิน', 'error');
-  const res = await QuoteFlow.api('addReceivable', {
-    customerName: cn,
-    quotationId : document.getElementById('rvQtId').value.trim(),
-    amount      : amt,
-    paidAmount  : Number(document.getElementById('rvPaid').value||0),
-    dueDate     : document.getElementById('rvDue').value,
-    note        : document.getElementById('rvNote').value.trim()
+function updatePay(){
+  if(_saving)return;
+  var id=document.getElementById('pId').value;
+  var paid=Number(document.getElementById('pNewPaid').value||0);
+  var note=document.getElementById('pNote').value;
+  _saving=true; document.getElementById('btnUpdatePay').disabled=true;
+  QuoteFlow.api('updateReceivable',{id:id,paidAmount:paid,note:note}).then(function(r){
+    _saving=false; document.getElementById('btnUpdatePay').disabled=false;
+    if(r.success){QuoteFlow.toast('อัปเดตสำเร็จ! ✅','success');QuoteFlow.closeModal('payUpdateModal');setTimeout(loadRv,2800);}
   });
-  if (res.success) {
-    QuoteFlow.toast('บันทึกสำเร็จ! 🎉', 'success');
-    QuoteFlow.closeModal('rvAddModal');
-    ['rvCustomer','rvQtId','rvAmount','rvPaid','rvDue','rvNote'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-    document.getElementById('rvPaid').value='0';
-    loadRv();
-  }
 }
 
-// Filters
-document.querySelectorAll('.rv-tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.rv-tab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    filterMode = btn.dataset.f;
-    renderCards();
+function saveRv(){
+  if(_saving)return;
+  var cn=document.getElementById('rvCust').value.trim();
+  var amt=Number(document.getElementById('rvAmount').value);
+  if(!cn){QuoteFlow.toast('กรุณาใส่ชื่อลูกค้า','error');return;}
+  if(!amt||amt<=0){QuoteFlow.toast('กรุณาใส่ยอดเงิน','error');return;}
+  _saving=true; document.getElementById('btnSaveRv').disabled=true;
+  QuoteFlow.api('addReceivable',{
+    customerName:cn, quotationId:document.getElementById('rvQtId').value.trim(),
+    amount:amt, paidAmount:Number(document.getElementById('rvPaid').value||0),
+    dueDate:document.getElementById('rvDue').value,
+    note:document.getElementById('rvNote').value.trim(),
+  }).then(function(r){
+    _saving=false; document.getElementById('btnSaveRv').disabled=false;
+    if(r.success){
+      QuoteFlow.toast('บันทึกสำเร็จ! ✅','success');
+      QuoteFlow.closeModal('rvAddModal');
+      ['rvCust','rvQtId','rvAmount','rvDue','rvNote'].forEach(function(id){document.getElementById(id).value='';});
+      document.getElementById('rvPaid').value='0';
+      setTimeout(loadRv,2800);
+    }
+  });
+}
+
+document.querySelectorAll('.rv-tab').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.rv-tab').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active'); filterMode=btn.dataset.f; renderCards();
   });
 });
-document.getElementById('rvSearch').addEventListener('input', renderCards);
-
+document.getElementById('rvSearch').addEventListener('input',renderCards);
 loadRv();
 </script>
 </body>
