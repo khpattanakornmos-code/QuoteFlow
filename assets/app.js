@@ -164,149 +164,200 @@ function exportQuotationPDF(qt) {
   var total = Number(qt.total) || 0;
   var dep   = calcDeposits(total);
   var C     = COMPANY;
+  var P     = C.colorPrimary;
+  var A     = C.colorAccent;
+  var L     = C.colorLight;
+  var B     = C.colorBorder;
 
-  // แปลงรูป items ให้ embed ได้
+  // ── สร้าง rows สินค้า ────────────────────────────────────
   var itemsHTML = items.map(function(it, i) {
     var rowTotal = (Number(it.qty)||1) * (Number(it.price)||0);
-    var imgTag   = (it.img && it.img.length > 100)
-      ? '<br><img src="'+it.img+'" style="width:80px;height:80px;object-fit:cover;border-radius:6px;margin-top:6px;border:1.5px solid '+C.colorBorder+';display:block;">'
-      : '';
-    return '<tr style="background:'+(i%2===0?C.colorLight:'#fff')+';vertical-align:top;-webkit-print-color-adjust:exact;print-color-adjust:exact;">' +
-      '<td style="padding:10px 14px;font-size:13px;border-bottom:1px solid '+C.colorBorder+';line-height:1.6;">' +
-        '<strong>'+( i+1)+'. '+(it.name||'-')+'</strong>'+imgTag+
+    // รูปสินค้า — ดึงจาก qt.items โดยตรง (base64 ที่ resize แล้ว)
+    var imgHTML = '';
+    if (it.img && it.img.length > 200 && it.img.indexOf('data:') === 0) {
+      imgHTML = '<div style="margin-top:6px;"><img src="' + it.img + '" ' +
+        'style="width:90px;height:90px;object-fit:cover;border-radius:8px;' +
+        'border:2px solid ' + B + ';box-shadow:0 2px 8px rgba(0,0,0,.12);display:block;"></div>';
+    }
+    var bg = i % 2 === 0 ? L : '#fff';
+    return '<tr style="background:' + bg + ';vertical-align:top;-webkit-print-color-adjust:exact;print-color-adjust:exact;">' +
+      '<td style="padding:12px 16px;font-size:13.5px;border-bottom:1px solid ' + B + ';line-height:1.7;">' +
+        '<span style="font-weight:600;color:#1a0d00;">' + (i+1) + '. ' + (it.name||'-') + '</span>' + imgHTML +
       '</td>' +
-      '<td style="padding:10px 14px;text-align:center;border-bottom:1px solid '+C.colorBorder+';font-size:13px;white-space:nowrap;">'+(it.qty||1)+' ชิ้น</td>' +
-      '<td style="padding:10px 14px;text-align:right;border-bottom:1px solid '+C.colorBorder+';font-size:13px;white-space:nowrap;">'+
-        (Number(it.price)||0).toLocaleString('th-TH')+' บาท</td>' +
-      '<td style="padding:10px 14px;text-align:right;border-bottom:1px solid '+C.colorBorder+';font-size:13px;font-weight:700;white-space:nowrap;color:'+C.colorPrimary+';">'+
-        rowTotal.toLocaleString('th-TH')+' บาท</td>' +
+      '<td style="padding:12px 16px;text-align:center;border-bottom:1px solid ' + B + ';font-size:13px;color:#444;vertical-align:middle;">' +
+        (it.qty||1) + ' ชิ้น' +
+      '</td>' +
+      '<td style="padding:12px 16px;text-align:right;border-bottom:1px solid ' + B + ';font-size:13px;color:#444;vertical-align:middle;">' +
+        (Number(it.price)||0).toLocaleString('th-TH') + ' บาท' +
+      '</td>' +
+      '<td style="padding:12px 16px;text-align:right;border-bottom:1px solid ' + B + ';font-size:13.5px;font-weight:700;color:' + P + ';vertical-align:middle;">' +
+        rowTotal.toLocaleString('th-TH') + ' บาท' +
+      '</td>' +
     '</tr>';
   }).join('');
 
-  // เงื่อนไขการชำระ
-  var termsRows =
-    '<li>'+C.termsExtra.replace(/\n/g,'</li><li>')+'</li>' +
-    '<li>แบ่งชำระ 3 งวด<ul style="margin:4px 0 4px 20px;">' +
-      '<li>งวดที่ 1 มัดจำ '+C.deposit1Pct+'% = '+dep.d1.toLocaleString('th-TH')+' บาท</li>' +
-      '<li>งวดที่ 2 ตรวจเช็คงานก่อนทำสีชำระ '+C.deposit2Pct+'% = '+dep.d2.toLocaleString('th-TH')+' บาท</li>' +
-      '<li>งวดที่ 3 ตรวจเช็คงานก่อนแพ็คก่อนส่งขึ้นรถชำระส่วนที่เหลือ '+C.deposit3Pct+'% = '+dep.d3.toLocaleString('th-TH')+' บาท</li>' +
-    '</ul></li>' +
-    '<li>กำหนดส่ง '+C.deliveryDays+' วัน หลังจากวันที่มัดจำ</li>';
+  // ── เงื่อนไขการชำระ ──────────────────────────────────────
+  var termsHTML =
+    '<li>' + C.termsExtra.replace(/\n/g,'</li><li>') + '</li>' +
+    '<li>แบ่งชำระ 3 งวด' +
+      '<ul style="margin:6px 0 4px 20px;">' +
+        '<li>งวดที่ 1 มัดจำ ' + C.deposit1Pct + '% = <strong>' + dep.d1.toLocaleString('th-TH') + ' บาท</strong></li>' +
+        '<li>งวดที่ 2 ตรวจเช็คงานก่อนทำสีชำระ ' + C.deposit2Pct + '% = <strong>' + dep.d2.toLocaleString('th-TH') + ' บาท</strong></li>' +
+        '<li>งวดที่ 3 ตรวจเช็คงานก่อนแพ็คก่อนส่งขึ้นรถชำระส่วนที่เหลือ ' + C.deposit3Pct + '% = <strong>' + dep.d3.toLocaleString('th-TH') + ' บาท</strong></li>' +
+      '</ul>' +
+    '</li>' +
+    '<li>กำหนดส่ง ' + C.deliveryDays + ' วัน หลังจากวันที่มัดจำ</li>';
 
-  var html = '<!DOCTYPE html><html><head>' +
-  '<meta charset="UTF-8">' +
-  '<style>' +
-    '@import url(\'https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap\');' +
-    '*{box-sizing:border-box;margin:0;padding:0;}' +
-    'body{font-family:\'Sarabun\',\'Noto Sans Thai\',sans-serif;background:#fff;color:#2c1a0e;width:100%;margin:0 auto;}' +
-    'table{border-collapse:collapse;width:100%;}' +
-    'ul{padding-left:20px;}li{margin-bottom:4px;line-height:1.8;font-size:13px;}' +
-    '@media print{' +
-      '@page{size:A4;margin:8mm 10mm;}' +
-      'body{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}' +
-    '}' +
-  '</style></head><body>' +
+  // ── HTML Template ────────────────────────────────────────
+  var pca = '-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;';
 
-  '<div style="width:794px;background:#fff;padding-bottom:40px;">' +
+  var html = '<!DOCTYPE html><html lang="th"><head>' +
+    '<meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<style>' +
+      // Font — ใช้ system Thai font เป็น fallback ที่ทำงานได้ดีที่สุดใน print
+      '@import url("https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap");' +
+      '*{box-sizing:border-box;margin:0;padding:0;}' +
+      'body{font-family:"Prompt","Sarabun","Noto Sans Thai",sans-serif;' +
+           'background:#fff;color:#2c1a0e;margin:0 auto;max-width:794px;' + pca + '}' +
+      'table{border-collapse:collapse;width:100%;}' +
+      'th,td{padding:0;}' +
+      'ul{padding-left:22px;}li{margin-bottom:5px;line-height:1.8;font-size:13px;}' +
+      'img{max-width:100%;}' +
+      '@media print{' +
+        '@page{size:A4;margin:0;}' +
+        'body{' + pca + '}' +
+        '.page{padding:0!important;}' +
+      '}' +
+    '</style>' +
+    '</head><body>' +
+    '<div class="page" style="background:#fff;max-width:794px;margin:0 auto;">' +
 
-  // ── Header ──────────────────────────────────────────────
-  '<div class="hdr" style="background:'+C.colorPrimary+';padding:0;display:flex;align-items:stretch;-webkit-print-color-adjust:exact;print-color-adjust:exact;">' +
-    // ซ้าย: โลโก้ + ข้อมูลบริษัท
-    '<div style="padding:20px 24px;flex:1;display:flex;align-items:center;gap:16px;">' +
-      // วงกลมโลโก้ (แทนรูป)
-      '<div style="flex-shrink:0;">' +
-        '<img src="'+C.logo+'" style="height:56px;width:auto;object-fit:contain;" crossorigin="anonymous">' +
-      '</div>' +
-      '<div>' +
-        '<div style="font-size:18px;font-weight:700;color:#fff;letter-spacing:-.3px;">'+C.name+'</div>' +
-        '<div style="font-size:11px;color:rgba(255,255,255,.85);margin-top:3px;">'+C.owner+'</div>' +
-        '<div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:2px;">'+C.address+'</div>' +
-        '<div style="font-size:11px;color:rgba(255,255,255,.75);">'+C.phone+'</div>' +
-      '</div>' +
-    '</div>' +
-    // ขวา: ชื่อเอกสาร
-    '<div style="background:rgba(0,0,0,.25);padding:20px 24px;text-align:right;display:flex;flex-direction:column;justify-content:center;min-width:200px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">' +
-      '<div style="font-size:22px;font-weight:700;color:#fff;letter-spacing:1px;">ใบเสนอราคา</div>' +
-      '<div style="color:rgba(255,255,255,.85);font-size:12px;margin-top:6px;">วันที่: '+fmtDate(qt.createdAt)+'</div>' +
-    '</div>' +
-  '</div>' +
-
-  // ── แถบสีทอง ─────────────────────────────────────────────
-  '<div class="accent" style="background:'+C.colorAccent+';height:6px;-webkit-print-color-adjust:exact;print-color-adjust:exact;"></div>' +
-
-  // ── ข้อมูลลูกค้า ──────────────────────────────────────────
-  '<div style="padding:16px 24px;border-bottom:2px solid '+C.colorBorder+';display:flex;justify-content:space-between;align-items:flex-start;">' +
-    '<div>' +
-      '<div style="font-size:11px;font-weight:600;color:'+C.colorAccent+';text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">ลูกค้า</div>' +
-      '<div style="font-size:15px;font-weight:700;color:'+C.colorPrimary+';">'+(qt.customerName||'-')+'</div>' +
-      (qt.note ? '<div style="font-size:12px;color:#666;margin-top:4px;max-width:400px;">'+qt.note+'</div>' : '') +
-    '</div>' +
-    '<div style="text-align:right;">' +
-      '<div style="font-size:11px;font-weight:600;color:'+C.colorAccent+';text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">เลขที่</div>' +
-      '<div style="font-size:14px;font-weight:700;color:'+C.colorPrimary+';">'+(qt.id||'')+'</div>' +
-    '</div>' +
-  '</div>' +
-
-  // ── ตารางสินค้า ────────────────────────────────────────────
-  '<div style="padding:0 24px;margin-top:16px;">' +
-    '<table>' +
-      '<thead>' +
-        '<tr style="background:'+C.colorPrimary+';-webkit-print-color-adjust:exact;print-color-adjust:exact;">' +
-          '<th style="padding:10px 14px;text-align:left;color:#fff;font-size:12px;font-weight:600;">รายละเอียด</th>' +
-          '<th style="padding:10px 14px;text-align:center;color:#fff;font-size:12px;font-weight:600;white-space:nowrap;">จำนวน</th>' +
-          '<th style="padding:10px 14px;text-align:right;color:#fff;font-size:12px;font-weight:600;white-space:nowrap;">ราคา</th>' +
-          '<th style="padding:10px 14px;text-align:right;color:#fff;font-size:12px;font-weight:600;white-space:nowrap;">ทั้งหมด</th>' +
-        '</tr>' +
-      '</thead>' +
-      '<tbody>'+itemsHTML+'</tbody>' +
+    // ━━ HEADER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    '<table style="width:100%;' + pca + '">' +
+      '<tr>' +
+        // Left: Logo + Company info
+        '<td style="background:' + P + ';padding:20px 24px;width:65%;' + pca + '">' +
+          '<table style="width:100%;">' +
+            '<tr>' +
+              '<td style="width:1%;padding-right:16px;vertical-align:middle;">' +
+                '<img src="' + C.logo + '" style="height:52px;width:auto;display:block;" />' +
+              '</td>' +
+              '<td style="vertical-align:middle;">' +
+                '<div style="font-size:17px;font-weight:700;color:#fff;line-height:1.3;">' + C.name + '</div>' +
+                '<div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:4px;line-height:1.6;">' +
+                  C.owner + '<br>' + C.address + '<br>' + C.phone +
+                '</div>' +
+              '</td>' +
+            '</tr>' +
+          '</table>' +
+        '</td>' +
+        // Right: Doc title
+        '<td style="background:rgba(0,0,0,.22);background:' + P + ';' +
+             'padding:20px 24px;text-align:right;vertical-align:middle;' + pca +
+             'border-left:1px solid rgba(255,255,255,.2);">' +
+          '<div style="font-size:24px;font-weight:700;color:#fff;letter-spacing:2px;">ใบเสนอราคา</div>' +
+          '<div style="font-size:12px;color:rgba(255,255,255,.8);margin-top:8px;">วันที่ ' + fmtDate(qt.createdAt) + '</div>' +
+        '</td>' +
+      '</tr>' +
     '</table>' +
-  '</div>' +
 
-  // ── ยอดรวม ──────────────────────────────────────────────
-  '<div style="padding:0 24px;margin-top:12px;display:flex;justify-content:flex-end;">' +
-    '<div style="min-width:300px;">' +
-      '<div style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid '+C.colorBorder+';">' +
-        '<span style="font-size:13px;color:#666;">ยอดรวม :</span>' +
-        '<span style="font-size:13px;font-weight:600;">'+total.toLocaleString('th-TH')+' บาท</span>' +
-      '</div>' +
-      (Number(qt.vat)>0?
-        '<div style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid '+C.colorBorder+';">' +
-          '<span style="font-size:13px;color:#666;">ภาษีมูลค่าเพิ่ม 7%</span>' +
-          '<span style="font-size:13px;">'+Number(qt.vat).toLocaleString('th-TH')+' บาท</span>' +
-        '</div>' : '') +
-      '<div class="total-box" style="background:'+C.colorPrimary+';padding:12px 16px;display:flex;justify-content:space-between;margin-top:8px;border-radius:6px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">' +
-        '<span style="font-size:15px;font-weight:700;color:#fff;">รวม</span>' +
-        '<span style="font-size:16px;font-weight:700;color:#fff;">'+total.toLocaleString('th-TH')+' บาท</span>' +
+    // Gold stripe
+    '<div style="height:5px;background:linear-gradient(90deg,' + A + ',' + C.colorPrimary + ');' + pca + '"></div>' +
+
+    // ━━ CUSTOMER + DOC NO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    '<table style="width:100%;border-bottom:1.5px solid ' + B + ';">' +
+      '<tr>' +
+        '<td style="padding:14px 24px;">' +
+          '<div style="font-size:10px;font-weight:600;color:' + A + ';letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;">ลูกค้า</div>' +
+          '<div style="font-size:16px;font-weight:700;color:' + P + ';">' + (qt.customerName||'-') + '</div>' +
+          (qt.note ? '<div style="font-size:12px;color:#666;margin-top:4px;line-height:1.6;">' + qt.note + '</div>' : '') +
+        '</td>' +
+        '<td style="padding:14px 24px;text-align:right;width:1%;white-space:nowrap;vertical-align:top;">' +
+          '<div style="font-size:10px;font-weight:600;color:' + A + ';letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;">เลขที่</div>' +
+          '<div style="font-size:14px;font-weight:700;color:' + P + ';">' + (qt.id||'') + '</div>' +
+        '</td>' +
+      '</tr>' +
+    '</table>' +
+
+    // ━━ ITEMS TABLE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    '<div style="padding:16px 24px 0;">' +
+      '<table>' +
+        '<thead>' +
+          '<tr style="background:' + P + ';' + pca + '">' +
+            '<th style="padding:11px 16px;text-align:left;color:#fff;font-size:12px;font-weight:600;letter-spacing:.5px;">รายละเอียด</th>' +
+            '<th style="padding:11px 16px;text-align:center;color:#fff;font-size:12px;font-weight:600;white-space:nowrap;">จำนวน</th>' +
+            '<th style="padding:11px 16px;text-align:right;color:#fff;font-size:12px;font-weight:600;white-space:nowrap;">ราคา/หน่วย</th>' +
+            '<th style="padding:11px 16px;text-align:right;color:#fff;font-size:12px;font-weight:600;white-space:nowrap;">รวม</th>' +
+          '</tr>' +
+        '</thead>' +
+        '<tbody>' + itemsHTML + '</tbody>' +
+      '</table>' +
+    '</div>' +
+
+    // ━━ TOTALS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    '<div style="padding:12px 24px;display:flex;justify-content:flex-end;">' +
+      '<div style="min-width:300px;">' +
+        // subtotal row
+        '<table style="width:100%;">' +
+          '<tr>' +
+            '<td style="padding:8px 14px;font-size:13px;color:#666;border-bottom:1px solid ' + B + ';">ยอดรวม :</td>' +
+            '<td style="padding:8px 14px;font-size:13px;font-weight:600;text-align:right;border-bottom:1px solid ' + B + ';">' +
+              total.toLocaleString('th-TH') + ' บาท' +
+            '</td>' +
+          '</tr>' +
+          (Number(qt.vat)>0 ?
+            '<tr>' +
+              '<td style="padding:8px 14px;font-size:13px;color:#666;border-bottom:1px solid ' + B + ';">ภาษีมูลค่าเพิ่ม 7%</td>' +
+              '<td style="padding:8px 14px;font-size:13px;text-align:right;border-bottom:1px solid ' + B + ';">' + Number(qt.vat).toLocaleString('th-TH') + ' บาท</td>' +
+            '</tr>' : '') +
+          '<tr style="background:' + P + ';' + pca + '">' +
+            '<td style="padding:13px 16px;font-size:15px;font-weight:700;color:#fff;border-radius:6px 0 0 6px;">รวม</td>' +
+            '<td style="padding:13px 16px;font-size:16px;font-weight:700;color:#fff;text-align:right;border-radius:0 6px 6px 0;">' +
+              total.toLocaleString('th-TH') + ' บาท' +
+            '</td>' +
+          '</tr>' +
+        '</table>' +
       '</div>' +
     '</div>' +
-  '</div>' +
 
-  // ── เงื่อนไข / การชำระเงิน ─────────────────────────────────
-  '<div style="padding:16px 24px;margin-top:12px;border-top:1.5px solid '+C.colorBorder+';">' +
-    '<ul style="color:#2c1a0e;">'+termsRows+'</ul>' +
-  '</div>' +
-
-  // ── ลายเซ็น + บัญชีธนาคาร ─────────────────────────────────
-  '<div style="padding:16px 24px;margin-top:8px;display:flex;justify-content:space-between;align-items:flex-end;border-top:1.5px solid '+C.colorBorder+';">' +
-    // ลายเซ็น
-    '<div style="text-align:center;">' +
-      '<div style="font-size:13px;color:#666;margin-bottom:52px;">ผู้เสนอราคา</div>' +
-      '<div style="border-top:1.5px solid #333;padding-top:6px;min-width:180px;">' +
-        '<div style="font-size:13px;font-weight:600;color:'+C.colorPrimary+';">('+C.owner+')</div>' +
-      '</div>' +
+    // ━━ TERMS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    '<div style="margin:8px 24px;padding:14px 18px;background:' + L + ';border-left:4px solid ' + A + ';border-radius:4px;' + pca + '">' +
+      '<ul style="color:#2c1a0e;">' + termsHTML + '</ul>' +
     '</div>' +
-    // บัญชีธนาคาร
-    '<div style="text-align:right;">' +
-      '<div style="font-size:12px;font-weight:600;color:'+C.colorPrimary+';margin-bottom:4px;">ชื่อบัญชี '+C.owner+'</div>' +
-      '<div style="font-size:12px;color:#444;">'+C.bank+'</div>' +
-      '<div style="font-size:12px;color:#444;">'+C.promptpay+'</div>' +
+
+    // ━━ SIGNATURE + BANK ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    '<table style="width:100%;margin-top:16px;padding:0 24px;border-top:1.5px solid ' + B + ';">' +
+      '<tr>' +
+        '<td style="padding:20px 24px;text-align:center;width:40%;vertical-align:bottom;">' +
+          '<div style="font-size:13px;color:#666;margin-bottom:56px;">ผู้เสนอราคา</div>' +
+          '<div style="border-top:1.5px solid #666;padding-top:8px;min-width:180px;display:inline-block;">' +
+            '<div style="font-size:13px;font-weight:600;color:' + P + ';">(' + C.owner + ')</div>' +
+          '</div>' +
+        '</td>' +
+        '<td style="padding:20px 24px;text-align:right;vertical-align:bottom;">' +
+          '<div style="font-size:13px;font-weight:600;color:' + P + ';margin-bottom:5px;">ชื่อบัญชี ' + C.owner + '</div>' +
+          '<div style="font-size:12.5px;color:#444;line-height:1.8;">' + C.bank + '</div>' +
+          '<div style="font-size:12.5px;color:#444;">' + C.promptpay + '</div>' +
+        '</td>' +
+      '</tr>' +
+    '</table>' +
+
+    // ━━ FOOTER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    '<div style="margin-top:12px;padding:10px 24px;background:' + L + ';text-align:center;border-top:1px solid ' + B + ';' + pca + '">' +
+      '<span style="font-size:10px;color:#888;">QuoteFlow • ' + C.name + ' • ' + new Date().toLocaleDateString('th-TH') + '</span>' +
     '</div>' +
-  '</div>' +
 
-  '</div></body></html>';
+    '</div>' + // .page
+    '<script>' +
+      // Auto-trigger print after fonts load
+      'document.fonts.ready.then(function(){' +
+        'setTimeout(function(){window.print();},600);' +
+      '});' +
+    '</' + 'script>' +
+    '</body></html>';
 
-  // เปิด popup แล้วพิมพ์
-  var win = window.open('', '_blank', 'width=900,height:780,scrollbars=yes');
+  var win = window.open('', '_blank', 'width=960,height=780,scrollbars=yes');
   if (!win) {
     toast('กรุณาอนุญาต Popup ในเบราว์เซอร์ก่อน แล้วลองใหม่', 'warn');
     return;
@@ -314,21 +365,7 @@ function exportQuotationPDF(qt) {
   win.document.open();
   win.document.write(html);
   win.document.close();
-
-  win.onload = function() {
-    setTimeout(function() {
-      win.focus();
-      win.print();
-    }, 1500);
-  };
-  // fallback ถ้า onload ไม่ fire
-  setTimeout(function() {
-    if (win && !win.closed) {
-      try { win.focus(); win.print(); } catch(e) {}
-    }
-  }, 3000);
 }
-
 function shareQuotation(qt){
   var text='📋 '+(qt.id||'')+'\n👤 '+(qt.customerName||'')+'\n💰 '+baht(qt.total)+'\n📅 '+fmtDate(qt.createdAt);
   if(navigator.share){navigator.share({title:'QT '+(qt.id||''),text:text});}
