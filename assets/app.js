@@ -130,125 +130,129 @@ function toast(msg,type){
 function openModal(id){var e=document.getElementById(id);if(e)e.classList.add('open');}
 function closeModal(id){var e=document.getElementById(id);if(e)e.classList.remove('open');}
 
-// ── PDF — ตรงตามใบจริง ────────────────────────────────────
-function exportQuotationPDF(qt, companyInfo) {
-  if(!window.jspdf){toast('กำลังโหลด PDF...','info');return;}
-  companyInfo = companyInfo || {};
-  var doc = new window.jspdf.jsPDF({unit:'mm',format:'a4'});
-  var items = Array.isArray(qt.items)?qt.items:[];
-  var W=210, margin=15;
+// ── PDF — ใช้ HTML template + html2canvas ─────────────────
+// วิธีนี้แสดงภาษาไทยได้ถูกต้อง 100% และรองรับรูปภาพ
+function exportQuotationPDF(qt) {
+  // สร้าง HTML template สำหรับ render
+  var items = Array.isArray(qt.items) ? qt.items : [];
 
-  // ── Header ─────────────────────────────────────────────
-  doc.setFillColor(26,76,113);
-  doc.rect(0,0,W,50,'F');
+  var itemsHTML = items.map(function(it, i) {
+    var total = (Number(it.qty)||1) * (Number(it.price)||0);
+    return '<tr style="background:'+(i%2===0?'#f8fbff':'#fff')+'">' +
+      '<td style="padding:10px 12px;font-weight:600;font-size:13px;border-bottom:1px solid #e8f0fb;">' +
+        (it.name||'-') +
+        (it.img && it.img.length > 5 && it.img !== '' ?
+          '<br><img src="'+it.img+'" style="width:60px;height:60px;object-fit:cover;border-radius:6px;margin-top:6px;border:1px solid #d4e2f4;">'
+          : '') +
+      '</td>' +
+      '<td style="padding:10px 12px;text-align:center;border-bottom:1px solid #e8f0fb;font-size:13px;">'+(it.qty||1)+'</td>' +
+      '<td style="padding:10px 12px;text-align:right;border-bottom:1px solid #e8f0fb;font-size:13px;">'+baht(it.price)+'</td>' +
+      '<td style="padding:10px 12px;text-align:right;border-bottom:1px solid #e8f0fb;font-size:13px;font-weight:700;color:#1e4e78;">'+baht(total)+'</td>' +
+    '</tr>';
+  }).join('');
 
-  // Logo placeholder
-  doc.setFillColor(255,255,255,0.2);
-  doc.setDrawColor(255,255,255);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(margin,8,28,28,3,3,'S');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(8); doc.setFont('helvetica','normal');
-  doc.text('LOGO',margin+14,25,{align:'center'});
+  var html = '<!DOCTYPE html><html><head>' +
+    '<meta charset="UTF-8">' +
+    '<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">' +
+    '<style>' +
+    '*{box-sizing:border-box;margin:0;padding:0;}' +
+    'body{font-family:"Prompt",sans-serif;background:#fff;color:#1e3a5f;width:794px;}' +
+    '</style></head><body>' +
+    '<div style="width:794px;min-height:1123px;background:#fff;position:relative;">' +
 
-  // ชื่อบริษัท
-  doc.setFontSize(16); doc.setFont('helvetica','bold');
-  doc.text(companyInfo.name||'QuoteFlow', 50, 18);
-  doc.setFontSize(8); doc.setFont('helvetica','normal');
-  if(companyInfo.address) doc.text(companyInfo.address, 50, 25);
-  if(companyInfo.phone)   doc.text(companyInfo.phone,   50, 31);
-  if(companyInfo.email)   doc.text(companyInfo.email,   50, 37);
+    // Header
+    '<div style="background:#1e4e78;padding:24px 32px;display:flex;align-items:center;justify-content:space-between;">' +
+      '<div>' +
+        '<div style="font-size:24px;font-weight:700;color:#fff;">QuoteFlow</div>' +
+        '<div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:4px;">ใบเสนอราคา / Quotation</div>' +
+      '</div>' +
+      '<div style="text-align:right;">' +
+        '<div style="font-size:20px;font-weight:700;color:#fff;">ใบเสนอราคา</div>' +
+        '<div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:4px;">เลขที่: '+(qt.id||'')+'</div>' +
+        '<div style="font-size:12px;color:rgba(255,255,255,.75);">วันที่: '+fmtDate(qt.createdAt)+'</div>' +
+      '</div>' +
+    '</div>' +
 
-  // ชื่อเอกสาร (ขวา)
-  doc.setFontSize(20); doc.setFont('helvetica','bold');
-  doc.text('QUOTATION', W-margin, 18, {align:'right'});
-  doc.setFontSize(8); doc.setFont('helvetica','normal');
-  doc.text('เลขที่: '+( qt.id||''), W-margin, 26, {align:'right'});
-  doc.text('วันที่: '+fmtDate(qt.createdAt), W-margin, 32, {align:'right'});
+    // Customer box
+    '<div style="margin:20px 32px 0;background:#f0f7ff;border:1px solid #d4e2f4;border-radius:10px;padding:16px 20px;">' +
+      '<div style="font-size:11px;color:#4a6fa5;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">ลูกค้า / Customer</div>' +
+      '<div style="font-size:18px;font-weight:700;color:#1e3a5f;">'+(qt.customerName||'-')+'</div>' +
+      (qt.note ? '<div style="font-size:12px;color:#4a6fa5;margin-top:6px;">'+qt.note+'</div>' : '') +
+    '</div>' +
 
-  // ── ลูกค้า ────────────────────────────────────────────
-  var y = 60;
-  doc.setDrawColor(200,210,230);
-  doc.setFillColor(245,248,255);
-  doc.roundedRect(margin, y-5, W-margin*2, 22, 2, 2, 'FD');
-  doc.setTextColor(80,80,80); doc.setFontSize(8);
-  doc.text('ลูกค้า / Customer', margin+3, y+1);
-  doc.setTextColor(20,20,20); doc.setFontSize(11); doc.setFont('helvetica','bold');
-  doc.text(qt.customerName||'-', margin+3, y+9);
-  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(80,80,80);
-  if(qt.note) doc.text(qt.note, margin+3, y+15, {maxWidth:W-margin*2-6});
+    // Table
+    '<div style="margin:20px 32px 0;">' +
+      '<table style="width:100%;border-collapse:collapse;">' +
+        '<thead>' +
+          '<tr style="background:#1e4e78;">' +
+            '<th style="padding:10px 12px;text-align:left;color:#fff;font-size:12px;font-weight:600;">รายละเอียดสินค้า / บริการ</th>' +
+            '<th style="padding:10px 12px;text-align:center;color:#fff;font-size:12px;font-weight:600;">จำนวน</th>' +
+            '<th style="padding:10px 12px;text-align:right;color:#fff;font-size:12px;font-weight:600;">ราคา/หน่วย</th>' +
+            '<th style="padding:10px 12px;text-align:right;color:#fff;font-size:12px;font-weight:600;">ทั้งหมด</th>' +
+          '</tr>' +
+        '</thead>' +
+        '<tbody>' + itemsHTML + '</tbody>' +
+      '</table>' +
+    '</div>' +
 
-  // ── ตารางสินค้า ────────────────────────────────────────
-  y = 92;
-  // Header
-  doc.setFillColor(26,76,113);
-  doc.rect(margin, y, W-margin*2, 8, 'F');
-  doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold');
-  doc.text('รายละเอียด', margin+3, y+5.5);
-  doc.text('จำนวน', 130, y+5.5, {align:'center'});
-  doc.text('ราคา', 158, y+5.5, {align:'right'});
-  doc.text('ทั้งหมด', W-margin, y+5.5, {align:'right'});
-  y += 8;
+    // Totals
+    '<div style="margin:16px 32px 0;display:flex;justify-content:flex-end;">' +
+      '<div style="min-width:280px;">' +
+        '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e8f0fb;">' +
+          '<span style="font-size:13px;color:#4a6fa5;">ยอดก่อนภาษี</span>' +
+          '<span style="font-size:13px;font-weight:600;">'+baht(qt.subtotal)+'</span>' +
+        '</div>' +
+        (Number(qt.vat)>0 ?
+          '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e8f0fb;">' +
+            '<span style="font-size:13px;color:#4a6fa5;">ภาษีมูลค่าเพิ่ม 7%</span>' +
+            '<span style="font-size:13px;color:#4a6fa5;">'+baht(qt.vat)+'</span>' +
+          '</div>' : '') +
+        '<div style="background:#1e4e78;border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;margin-top:8px;">' +
+          '<span style="font-size:15px;font-weight:700;color:#fff;">ยอดรวมทั้งสิ้น</span>' +
+          '<span style="font-size:15px;font-weight:700;color:#fff;">'+baht(qt.total)+'</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
 
-  doc.setTextColor(30,30,30); doc.setFont('helvetica','normal');
-  items.forEach(function(it, i) {
-    if(y > 230){doc.addPage(); y=20;}
-    var rowH = 12;
-    // สลับสี
-    if(i%2===0){doc.setFillColor(249,251,255);doc.rect(margin,y,W-margin*2,rowH,'F');}
-    doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(20,20,20);
-    doc.text(String(it.name||'-').substring(0,45), margin+3, y+5);
-    doc.setFont('helvetica','normal'); doc.setTextColor(60,60,60); doc.setFontSize(8);
-    doc.text(String(it.qty||1), 130, y+5, {align:'center'});
-    doc.text(baht(it.price), 158, y+5, {align:'right'});
-    doc.setFont('helvetica','bold'); doc.setTextColor(20,20,20);
-    doc.text(baht((it.qty||1)*(it.price||0)), W-margin, y+5, {align:'right'});
-    // เส้นคั่น
-    doc.setDrawColor(220,228,240); doc.setLineWidth(0.3);
-    doc.line(margin, y+rowH, W-margin, y+rowH);
-    y += rowH;
-  });
+    // Note / terms
+    (qt.note ?
+      '<div style="margin:20px 32px 0;padding:12px 16px;background:#fffbeb;border-left:4px solid #f59e0b;border-radius:4px;">' +
+        '<div style="font-size:11px;font-weight:600;color:#92400e;margin-bottom:4px;">หมายเหตุ / เงื่อนไข</div>' +
+        '<div style="font-size:13px;color:#78350f;">'+qt.note+'</div>' +
+      '</div>' : '') +
 
-  // ── ยอดรวม ────────────────────────────────────────────
-  y += 5;
-  doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(60,60,60);
-  doc.text('ยอดรวม:', 145, y); doc.text(baht(qt.subtotal), W-margin, y, {align:'right'}); y+=7;
-  if(Number(qt.vat)>0){
-    doc.text('ภาษีมูลค่าเพิ่ม 7%:', 130, y); doc.text(baht(qt.vat), W-margin, y, {align:'right'}); y+=7;
+    // Signature
+    '<div style="margin:32px 32px 0;display:flex;justify-content:flex-end;">' +
+      '<div style="text-align:center;min-width:200px;">' +
+        '<div style="font-size:13px;color:#4a6fa5;margin-bottom:48px;">ผู้เสนอราคา</div>' +
+        '<div style="border-top:1.5px solid #1e3a5f;padding-top:8px;">' +
+          '<div style="font-size:12px;color:#4a6fa5;">(........................................)</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    // Footer
+    '<div style="position:absolute;bottom:0;left:0;right:0;background:#f0f7ff;padding:10px 32px;display:flex;justify-content:center;">' +
+      '<span style="font-size:10px;color:#93aed4;">QuoteFlow Business Suite  •  '+new Date().toLocaleDateString('th-TH')+'</span>' +
+    '</div>' +
+  '</div></body></html>';
+
+  // เปิด popup window แล้ว print เป็น PDF
+  var win = window.open('', '_blank', 'width=900,height=700');
+  if (!win) {
+    toast('กรุณาอนุญาต Popup ในเบราว์เซอร์ก่อน แล้วลองใหม่', 'warn');
+    return;
   }
-  // กล่องรวมสุดท้าย
-  doc.setFillColor(26,76,113);
-  doc.roundedRect(125, y-5, W-margin-125, 12, 2,2,'F');
-  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(11);
-  doc.text('รวม', 135, y+3.5);
-  doc.text(baht(qt.total), W-margin, y+3.5, {align:'right'});
+  win.document.write(html);
+  win.document.close();
 
-  // ── เงื่อนไขการชำระเงิน ──────────────────────────────
-  if(qt.note){
-    y += 20;
-    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(26,76,113);
-    doc.text('หมายเหตุ / เงื่อนไข:', margin, y);
-    doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50); y+=6;
-    var lines = doc.splitTextToSize(qt.note, W-margin*2-5);
-    doc.text(lines, margin+3, y);
-  }
-
-  // ── ลายเซ็น ───────────────────────────────────────────
-  var sigY = 255;
-  doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(60,60,60);
-  doc.text('ผู้เสนอราคา', W/2, sigY, {align:'center'});
-  doc.setLineWidth(0.5); doc.setDrawColor(100,100,100);
-  doc.line(W/2-30, sigY+18, W/2+30, sigY+18);
-  doc.setFontSize(8);
-  doc.text('(........................................)', W/2, sigY+23, {align:'center'});
-
-  // ── Footer ────────────────────────────────────────────
-  doc.setFillColor(240,245,252);
-  doc.rect(0,279,W,18,'F');
-  doc.setFontSize(7); doc.setTextColor(120,140,170);
-  doc.text('QuoteFlow Business Suite  •  '+new Date().toLocaleDateString('th-TH'), W/2, 287, {align:'center'});
-
-  doc.save('QT-'+(qt.id||'quotation')+'.pdf');
+  // รอ font โหลดแล้ว print
+  win.onload = function() {
+    setTimeout(function() {
+      win.focus();
+      win.print();
+    }, 1200);
+  };
 }
 
 function shareQuotation(qt){
