@@ -156,11 +156,48 @@ function addItemRow(item){
 }
 
 function removeItem(id){var el=document.getElementById(id);if(el)el.remove();recalc();document.querySelectorAll('#itemsList .item-num').forEach(function(e,i){e.textContent=i+1;});}
-function previewImg(input,id){var file=input.files[0];if(!file)return;var r=new FileReader();r.onload=function(e){var img=document.getElementById('img-'+id);img.src=e.target.result;img.style.display='block';};r.readAsDataURL(file);}
+function previewImg(input,id){
+  var file=input.files[0];if(!file)return;
+  // resize ก่อนบันทึก เพื่อให้ขนาดไม่ใหญ่เกินไป
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var origSrc=e.target.result;
+    // resize to max 400px via canvas
+    var img2=new Image();
+    img2.onload=function(){
+      var maxW=400,maxH=400,w=img2.width,h=img2.height;
+      if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+      if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}
+      var canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img2,0,0,w,h);
+      var resized=canvas.toDataURL('image/jpeg',0.75);
+      var el=document.getElementById('img-'+id);
+      el.src=resized;el.style.display='block';
+      // เก็บ base64 ไว้ใน data attribute เพื่อดึงตอน export PDF
+      el.setAttribute('data-b64',resized);
+    };
+    img2.src=origSrc;
+  };
+  reader.readAsDataURL(file);
+}
 
 function getItems(){
   return Array.from(document.querySelectorAll('#itemsList .item-row')).map(function(row){
-    return{name:(row.querySelector('[data-field="name"]')||{}).value||'',qty:Number((row.querySelector('[data-field="qty"]')||{}).value||1),price:Number((row.querySelector('[data-field="price"]')||{}).value||0),img:(row.querySelector('img')||{}).src||''};
+    var imgEl=row.querySelector('img');
+    // ดึง base64 จาก data-b64 (resize แล้ว) หรือ src ถ้าไม่มี
+    var imgSrc='';
+    if(imgEl&&imgEl.style.display!=='none'){
+      imgSrc=imgEl.getAttribute('data-b64')||imgEl.src||'';
+      // ถ้าเป็น URL ปกติ (ไม่ใช่ base64) ไม่เอา
+      if(imgSrc&&!imgSrc.startsWith('data:'))imgSrc='';
+    }
+    return{
+      name:(row.querySelector('[data-field="name"]')||{}).value||'',
+      qty:Number((row.querySelector('[data-field="qty"]')||{}).value||1),
+      price:Number((row.querySelector('[data-field="price"]')||{}).value||0),
+      img:imgSrc
+    };
   });
 }
 
