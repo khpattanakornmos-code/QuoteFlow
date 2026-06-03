@@ -165,6 +165,7 @@ Visibility: Public ✅ (ต้องเป็น Public สำหรับ GitHu
 ใน Repository ที่สร้าง คลิก "uploading an existing file"
 ลากและวางไฟล์ทั้งหมดจากโฟลเดอร์ QuoteFlow:
 
+   Code.gs
    index.html
    dashboard.html
    quotation.html

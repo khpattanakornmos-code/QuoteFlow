@@ -208,7 +208,7 @@ function updatePay(){
   _saving=true; document.getElementById('btnUpdatePay').disabled=true;
   QuoteFlow.api('updateReceivable',{id:id,paidAmount:paid,note:note}).then(function(r){
     _saving=false; document.getElementById('btnUpdatePay').disabled=false;
-    if(r.success){QuoteFlow.toast('อัปเดตสำเร็จ! ✅','success');QuoteFlow.closeModal('payUpdateModal');setTimeout(loadRv,2800);}
+    if(r.success){QuoteFlow.toast('อัปเดตสำเร็จ! ✅','success');QuoteFlow.closeModal('payUpdateModal');loadRv();}
   });
 }
 
@@ -231,7 +231,7 @@ function saveRv(){
       QuoteFlow.closeModal('rvAddModal');
       ['rvCust','rvQtId','rvAmount','rvDue','rvNote'].forEach(function(id){document.getElementById(id).value='';});
       document.getElementById('rvPaid').value='0';
-      setTimeout(loadRv,2800);
+      loadRv();
     }
   });
 }

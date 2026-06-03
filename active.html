@@ -62,7 +62,11 @@
     <!-- ข้อมูลมัดจำ -->
     <div class="card mb-16" style="background:var(--blue-pale);border-color:var(--blue-light);">
       <div class="card-title mb-12" style="margin-bottom:12px;">💰 ข้อมูลมัดจำ</div>
-      <div class="form-row form-row-2">
+      <div class="form-row form-row-3">
+        <div class="form-group">
+          <label class="form-label">% มัดจำ</label>
+          <input type="number" class="form-input" id="depositPct" placeholder="40" min="0" max="100" step="0.01" oninput="syncDepositAmount()">
+        </div>
         <div class="form-group">
           <label class="form-label">ยอดมัดจำ (บาท)</label>
           <input type="number" class="form-input" id="depositAmount" placeholder="0.00" min="0">
@@ -146,7 +150,7 @@ function renderOrders() {
       '</div>'+
       '<div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:3px;">'+(o.customerName||'-')+'</div>'+
       '<div style="font-size:12px;color:var(--text3);margin-bottom:10px;">💰 '+QuoteFlow.baht(o.total)+
-        (o.depositAmount>0?' &nbsp;|&nbsp; มัดจำ '+QuoteFlow.baht(o.depositAmount)+(o.depositPaid==='true'?' ✅':''):'')+'</div>'+
+        (o.depositAmount>0?' &nbsp;|&nbsp; มัดจำ '+(o.depositPct?Number(o.depositPct).toLocaleString('th-TH')+'% ':'')+QuoteFlow.baht(o.depositAmount)+((o.depositPaid===true||o.depositPaid==='true')?' ✅':''):'')+'</div>'+
       '<div style="font-size:12px;color:var(--text3);margin-bottom:12px;">📅 กำหนดส่ง: '+(o.dueDate?QuoteFlow.fmtDate(o.dueDate):'-')+'</div>'+
       '<div class="progress-bar mb-4"><div class="progress-fill" style="width:'+pct+'%;background:linear-gradient(90deg,#3b82f6,#10b981);"></div></div>'+
       '<div style="font-size:11px;color:var(--text3);margin-bottom:10px;">'+tl.length+' ขั้นตอน / '+pct+'%</div>'+
@@ -186,6 +190,7 @@ function openTl(qId) {
   }).join('');
 
   // Deposit
+  document.getElementById('depositPct').value    = o.depositPct||40;
   document.getElementById('depositAmount').value = o.depositAmount||'';
   document.getElementById('depositPaid').value   = o.depositPaid===true||o.depositPaid==='true'?'true':'false';
 
@@ -201,6 +206,11 @@ function openTl(qId) {
 }
 
 function pickStep(s){document.getElementById('customStep').value=s;}
+function syncDepositAmount(){
+  if(!currentOrder)return;
+  var pct=Number(document.getElementById('depositPct').value)||0;
+  document.getElementById('depositAmount').value=Math.round((Number(currentOrder.total)||0)*pct/100);
+}
 function pickStatus(btn,s){
   selectedStatus=s;
   document.querySelectorAll('.st-pill').forEach(function(b){b.classList.remove('active');});
@@ -211,6 +221,7 @@ function saveTimeline() {
   if(!currentOrder) return;
   var step          = document.getElementById('customStep').value.trim();
   var dueDate       = document.getElementById('newDueDate').value;
+  var depositPct    = Number(document.getElementById('depositPct').value)||0;
   var depositAmount = Number(document.getElementById('depositAmount').value)||0;
   var depositPaid   = document.getElementById('depositPaid').value;
 
@@ -218,6 +229,7 @@ function saveTimeline() {
     quotationId  : currentOrder.quotationId,
     status       : selectedStatus,
     dueDate      : dueDate,
+    depositPct   : depositPct,
     depositAmount: depositAmount,
     depositPaid  : depositPaid==='true',
   };
@@ -227,7 +239,7 @@ function saveTimeline() {
     if(res.success){
       QuoteFlow.toast('อัปเดตสำเร็จ! ✅','success');
       QuoteFlow.closeModal('tlModal');
-      setTimeout(loadOrders, 2800);
+      loadOrders();
     } else {
       QuoteFlow.toast('เกิดข้อผิดพลาด','error');
     }

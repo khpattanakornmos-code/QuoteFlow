@@ -13,6 +13,8 @@ var READ_ACTIONS = [
   'ping','login','getQuotations','getActiveOrders',
   'getFinance','getPayroll','getReceivables','getDashboard',
 ];
+var READ_CACHE_TTL = 20000;
+var _readCache = {};
 
 function api(action, data) {
   data  = data  || {};
@@ -28,13 +30,25 @@ function api(action, data) {
 }
 
 function doGET(action, data, email) {
+  var cacheKey = action + '|' + email + '|' + JSON.stringify(data || {});
+  var cached = _readCache[cacheKey];
+  var now = Date.now();
+  if (cached && now - cached.time < READ_CACHE_TTL) {
+    return Promise.resolve(JSON.parse(JSON.stringify(cached.value)));
+  }
   var qs  = 'action='+encodeURIComponent(action)
           + '&email='+encodeURIComponent(email)
           + '&data=' +encodeURIComponent(JSON.stringify(data));
   return fetch(CONFIG.API_URL+'?'+qs, {method:'GET',redirect:'follow'})
     .then(function(r){return r.text();})
     .then(function(t){
-      try{return JSON.parse(t);}
+      try{
+        var parsed = JSON.parse(t);
+        if (parsed && parsed.success) {
+          _readCache[cacheKey] = {time:now,value:parsed};
+        }
+        return parsed;
+      }
       catch(e){console.error('GET parse:',t.slice(0,200));return{success:false};}
     })
     .catch(function(e){
@@ -52,9 +66,17 @@ function doPOST(action, data, email) {
     headers:{'Content-Type':'text/plain'}, body:body,
   })
   .then(function(){
-    return new Promise(function(res){setTimeout(function(){res({success:true});},2500);});
+    invalidateCache();
+    return {success:true,id:clean.id||''};
   })
   .catch(function(e){return{success:false,error:e.message};});
+}
+
+function invalidateCache(action) {
+  if (!action) {_readCache = {}; return;}
+  Object.keys(_readCache).forEach(function(k){
+    if (k.indexOf(action + '|') === 0) delete _readCache[k];
+  });
 }
 
 function stripImg(data) {
@@ -110,6 +132,21 @@ function parseJwt(token){
 function baht(n){return'฿'+(Number(n)||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmtDate(d){if(!d)return'-';try{return new Date(d).toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'});}catch(e){return'-';}}
 function shortId(id){return id?String(id).substring(0,12):'-';}
+function itemDimensionText(it){
+  var d=(it&&it.dimensions)?it.dimensions:{};
+  var parts=[];
+  if(d.width!==''&&d.width!==undefined&&d.width!==null)parts.push('กว้าง '+Number(d.width).toLocaleString('th-TH'));
+  if(d.length!==''&&d.length!==undefined&&d.length!==null)parts.push('ยาว '+Number(d.length).toLocaleString('th-TH'));
+  if(d.height!==''&&d.height!==undefined&&d.height!==null)parts.push('สูง '+Number(d.height).toLocaleString('th-TH'));
+  return parts.length?parts.join(' / ')+' '+(d.unit||'CM'):'';
+}
+function makeId(prefix){
+  prefix = prefix || 'ID';
+  var d = new Date();
+  var pad = function(n){return String(n).padStart(2,'0');};
+  var stamp = d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes())+pad(d.getSeconds());
+  return prefix + '-' + stamp + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
+}
 
 // ── TOAST ─────────────────────────────────────────────────
 function toast(msg,type){
@@ -174,6 +211,7 @@ function exportQuotationPDF(qt) {
   for (var i = 0; i < items.length; i++) {
     var it  = items[i];
     var rowT = (Number(it.qty)||1) * (Number(it.price)||0);
+    var dimText = itemDimensionText(it);
     var imgH = '';
     // ตรวจสอบว่ามีรูปจริง (base64)
     if (it.img && typeof it.img === 'string' && it.img.length > 500 && it.img.substring(0,5) === 'data:') {
@@ -186,7 +224,8 @@ function exportQuotationPDF(qt) {
     itemsHTML +=
       '<tr style="background:' + bg + ';' + PCA + 'vertical-align:top;">' +
         '<td style="padding:12px 16px;font-size:13px;border-bottom:1px solid ' + B + ';line-height:1.7;">' +
-          '<b>' + (i+1) + '. ' + (it.name||'-') + '</b>' + imgH +
+          '<b>' + (i+1) + '. ' + (it.name||'-') + '</b>' +
+          (dimText ? '<div style="font-size:11.5px;color:#6b4a2f;margin-top:4px;">ขนาด: ' + dimText + '</div>' : '') + imgH +
         '</td>' +
         '<td style="padding:12px 16px;text-align:center;border-bottom:1px solid ' + B + ';font-size:13px;vertical-align:middle;white-space:nowrap;">' +
           (it.qty||1) + ' ชิ้น' +
@@ -372,7 +411,7 @@ function shareQuotation(qt){
 }
 
 window.QuoteFlow={
-  api,getUser,setUser,logout,requireAuth,googleSignIn,
-  baht,fmtDate,shortId,toast,openModal,closeModal,
+  api,invalidateCache,getUser,setUser,logout,requireAuth,googleSignIn,
+  baht,fmtDate,shortId,itemDimensionText,makeId,toast,openModal,closeModal,
   exportQuotationPDF,shareQuotation,
 };

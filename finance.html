@@ -191,7 +191,7 @@ function saveFin(){
       QuoteFlow.closeModal('finModal');
       document.getElementById('finAmount').value='';
       document.getElementById('finDesc').value='';
-      setTimeout(loadFinance, 2800);
+      loadFinance();
     }
   });
 }
@@ -199,7 +199,7 @@ function saveFin(){
 function delFin(id){
   if(!confirm('ลบรายการนี้?'))return;
   QuoteFlow.api('deleteFinance',{id:id}).then(function(r){
-    if(r.success){QuoteFlow.toast('ลบแล้ว','warn');setTimeout(loadFinance,2800);}
+    if(r.success){QuoteFlow.toast('ลบแล้ว','warn');loadFinance();}
   });
 }
 

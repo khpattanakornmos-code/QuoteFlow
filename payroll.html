@@ -173,14 +173,14 @@ function savePay(){
       document.getElementById('workerName').value='';
       document.getElementById('payAmount').value='';
       document.getElementById('payDesc').value='';
-      setTimeout(loadPayroll,2800);
+      loadPayroll();
     }
   });
 }
 
 function markPaid(id){
   QuoteFlow.api('updatePayroll',{id:id,status:'Paid'}).then(function(r){
-    if(r.success){QuoteFlow.toast('บันทึกการจ่ายแล้ว ✅','success');setTimeout(loadPayroll,2800);}
+    if(r.success){QuoteFlow.toast('บันทึกการจ่ายแล้ว ✅','success');loadPayroll();}
   });
 }
 

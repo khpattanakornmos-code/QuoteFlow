@@ -11,6 +11,18 @@
 .mini-row:hover{background:var(--blue-pale);border-color:var(--border);}
 .qa-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:var(--card-alt);border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all var(--t);text-decoration:none;}
 .qa-btn:hover{background:var(--blue-pale);border-color:var(--blue-light);color:var(--blue);transform:translateY(-1px);}
+.month-chart{display:flex;flex-direction:column;gap:10px;}
+.chart-row{display:grid;grid-template-columns:52px minmax(0,1fr) 104px;gap:12px;align-items:center;}
+.chart-month{font-size:12px;font-weight:600;color:var(--text2);}
+.chart-bars{display:flex;flex-direction:column;gap:5px;min-width:0;}
+.chart-track{height:9px;background:var(--border2);border-radius:10px;overflow:hidden;}
+.chart-fill{height:100%;border-radius:10px;transition:width .45s cubic-bezier(.4,0,.2,1);}
+.chart-fill.income{background:linear-gradient(90deg,#10b981,#34d399);}
+.chart-fill.expense{background:linear-gradient(90deg,#ef4444,#f87171);}
+.chart-meta{font-size:11px;text-align:right;line-height:1.45;white-space:nowrap;}
+.chart-legend{display:flex;gap:14px;align-items:center;font-size:12px;color:var(--text2);}
+.legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px;}
+@media(max-width:540px){.chart-row{grid-template-columns:42px minmax(0,1fr);}.chart-meta{grid-column:2;text-align:left;}}
 </style>
 </head>
 <body>
@@ -40,6 +52,18 @@
         <div class="card stat-card" style="border-top:3px solid var(--red)"><div class="stat-icon" style="background:#fee2e2;color:var(--red)">❤️</div><div class="stat-value text-red" id="s-expense">--</div><div class="stat-label">รายจ่ายเดือนนี้</div></div>
         <div class="card stat-card" style="border-top:3px solid var(--blue)"><div class="stat-icon">📈</div><div class="stat-value" id="s-profit">--</div><div class="stat-label">กำไรสุทธิ</div></div>
         <div class="card stat-card" style="border-top:3px solid var(--amber)"><div class="stat-icon" style="background:#fef3c7;color:var(--amber)">⏳</div><div class="stat-value text-amber" id="s-recv">--</div><div class="stat-label">ยอดค้างชำระ</div></div>
+      </div>
+      <div class="card mb-24">
+        <div class="flex-between mb-16" style="flex-wrap:wrap;gap:10px;">
+          <div class="card-title" style="margin:0">📈 รายรับ / รายจ่าย รายเดือน</div>
+          <div class="chart-legend">
+            <span><i class="legend-dot" style="background:#10b981;"></i>รายรับ</span>
+            <span><i class="legend-dot" style="background:#ef4444;"></i>รายจ่าย</span>
+          </div>
+        </div>
+        <div id="monthlyChart" class="month-chart">
+          <div class="empty-state" style="padding:24px 20px;"><div class="empty-icon">📈</div><p>ยังไม่มีข้อมูลรายเดือน</p></div>
+        </div>
       </div>
       <div class="grid grid-2">
         <div class="card">
@@ -106,6 +130,7 @@ function loadDashboard(){
     var pi=Math.round(d.totalIncome/mx*100), pe2=Math.round(d.totalExpense/mx*100);
     document.getElementById('prog-inc').style.width=pi+'%'; document.getElementById('pct-inc').textContent=pi+'%';
     document.getElementById('prog-exp').style.width=pe2+'%'; document.getElementById('pct-exp').textContent=pe2+'%';
+    renderMonthlyChart(d.monthlyFinance||[]);
     var qtEl=document.getElementById('recentQt');
     if(d.recentQuotations&&d.recentQuotations.length){
       qtEl.innerHTML=d.recentQuotations.map(function(q){
@@ -120,6 +145,28 @@ function loadDashboard(){
     }
     document.getElementById('lastUpdate').textContent='อัปเดต '+new Date().toLocaleTimeString('th-TH');
   });
+}
+function renderMonthlyChart(rows){
+  var el=document.getElementById('monthlyChart');
+  var labels=['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  var max=1;
+  rows.forEach(function(r){max=Math.max(max,Number(r.income)||0,Number(r.expense)||0);});
+  if(!rows.length||max<=1){
+    el.innerHTML='<div class="empty-state" style="padding:24px 20px;"><div class="empty-icon">📈</div><p>ยังไม่มีข้อมูลรายเดือน</p></div>';
+    return;
+  }
+  el.innerHTML=rows.map(function(r){
+    var inc=Number(r.income)||0, exp=Number(r.expense)||0, prof=Number(r.profit)||inc-exp;
+    var iw=Math.round(inc/max*100), ew=Math.round(exp/max*100);
+    return '<div class="chart-row">'+
+      '<div class="chart-month">'+(labels[r.month]||r.month)+'</div>'+
+      '<div class="chart-bars">'+
+        '<div class="chart-track"><div class="chart-fill income" style="width:'+iw+'%"></div></div>'+
+        '<div class="chart-track"><div class="chart-fill expense" style="width:'+ew+'%"></div></div>'+
+      '</div>'+
+      '<div class="chart-meta"><div class="text-green">'+QuoteFlow.baht(inc)+'</div><div class="text-red">'+QuoteFlow.baht(exp)+'</div><div class="'+(prof>=0?'text-blue':'text-red')+'">กำไร '+QuoteFlow.baht(prof)+'</div></div>'+
+    '</div>';
+  }).join('');
 }
 loadDashboard();
 </script>
