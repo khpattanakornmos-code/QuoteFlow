@@ -16,6 +16,12 @@
 .rv-tab.active{background:var(--blue-grad);color:#fff;border-color:transparent;box-shadow:var(--shadow-sm);}
 .ring-wrap{position:relative;width:52px;height:52px;flex-shrink:0;}
 .ring-lbl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text);}
+.quick-pay{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.quick-pay button{padding:5px 10px;border-radius:16px;background:#fff;border:1px solid var(--border);font-size:11px;color:var(--text2);font-family:var(--font);}
+.quick-pay button:hover{background:var(--blue-pale);color:var(--blue);}
+.pay-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+.pay-summary>div{background:#fff;border:1px solid var(--border2);border-radius:8px;padding:8px;text-align:center;}
+@media(max-width:540px){.pay-summary{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -89,17 +95,31 @@
     <div style="background:var(--blue-pale);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;">
       <div style="font-size:13px;color:var(--text2);margin-bottom:4px;">ลูกค้า</div>
       <div style="font-size:18px;font-weight:700;" id="pName"></div>
-      <div class="flex-between mt-8">
-        <div><div style="font-size:11px;color:var(--text3);">ยอดรวม</div><div style="font-size:15px;font-weight:600;" id="pTotal"></div></div>
-        <div><div style="font-size:11px;color:var(--text3);">จ่ายแล้ว</div><div style="font-size:15px;font-weight:600;color:var(--green);" id="pPaid"></div></div>
-        <div><div style="font-size:11px;color:var(--text3);">คงค้าง</div><div style="font-size:15px;font-weight:600;color:var(--red);" id="pBal"></div></div>
+      <div class="pay-summary">
+        <div><div style="font-size:11px;color:var(--text3);">ยอดรวม</div><div style="font-size:14px;font-weight:600;" id="pTotal"></div></div>
+        <div><div style="font-size:11px;color:var(--text3);">จ่ายแล้ว</div><div style="font-size:14px;font-weight:600;color:var(--green);" id="pPaid"></div></div>
+        <div><div style="font-size:11px;color:var(--text3);">คงค้าง</div><div style="font-size:14px;font-weight:600;color:var(--red);" id="pBal"></div></div>
       </div>
     </div>
     <div class="form-group mb-12">
-      <label class="form-label">ยอดที่ชำระแล้วรวม (บาท)</label>
-      <input type="number" class="form-input" id="pNewPaid" min="0" style="font-size:18px;font-weight:600;" oninput="updatePreview()">
+      <label class="form-label">รูปแบบการรับชำระ</label>
+      <select class="form-input" id="pPayMode" onchange="updatePaymentMode()">
+        <option value="add">รับยอดจ่ายเพิ่ม</option>
+        <option value="full">รับเต็มยอดคงเหลือ</option>
+        <option value="set">ปรับยอดชำระแล้วรวม</option>
+      </select>
+    </div>
+    <div class="form-group mb-12">
+      <label class="form-label" id="pAmountLabel">ยอดที่รับเพิ่ม (บาท)</label>
+      <input type="number" class="form-input" id="pPayAmount" min="0" step="0.01" placeholder="0.00" style="font-size:18px;font-weight:600;" oninput="updatePreview()">
+      <div class="quick-pay">
+        <button type="button" onclick="setQuickPay(0.25)">25%</button>
+        <button type="button" onclick="setQuickPay(0.5)">50%</button>
+        <button type="button" onclick="setQuickPay(1)">เต็มคงเหลือ</button>
+      </div>
       <div style="font-size:12px;margin-top:4px;" id="payPreview"></div>
     </div>
+    <div class="form-group mb-12"><label class="form-label">วันที่รับเงิน</label><input type="date" class="form-input" id="pPaymentDate"></div>
     <div class="form-group mb-20"><label class="form-label">หมายเหตุ</label><input class="form-input" id="pNote"></div>
     <div class="flex-center gap-10" style="justify-content:flex-end;">
       <button class="btn btn-outline" onclick="QuoteFlow.closeModal('payUpdateModal')">ยกเลิก</button>
@@ -181,33 +201,79 @@ function renderCards(){
 function openPay(id){
   curRv=null; for(var i=0;i<rvData.length;i++){if(rvData[i].id===id){curRv=rvData[i];break;}}
   if(!curRv)return;
+  var today=new Date();
+  var pad=function(n){return String(n).padStart(2,'0');};
   document.getElementById('pId').value     = id;
   document.getElementById('pName').textContent = curRv.customerName;
   document.getElementById('pTotal').textContent = QuoteFlow.baht(curRv.amount);
   document.getElementById('pPaid').textContent  = QuoteFlow.baht(curRv.paidAmount);
   document.getElementById('pBal').textContent   = QuoteFlow.baht(curRv.balance);
-  document.getElementById('pNewPaid').value = curRv.paidAmount||0;
+  document.getElementById('pPayMode').value = 'add';
+  document.getElementById('pPayAmount').value = '';
+  document.getElementById('pPayAmount').disabled = false;
+  document.getElementById('pPaymentDate').value = today.getFullYear()+'-'+pad(today.getMonth()+1)+'-'+pad(today.getDate());
   document.getElementById('pNote').value    = curRv.note||'';
-  document.getElementById('payPreview').textContent='';
+  updatePaymentMode();
   QuoteFlow.openModal('payUpdateModal');
+}
+
+function updatePaymentMode(){
+  if(!curRv)return;
+  var mode=document.getElementById('pPayMode').value;
+  var input=document.getElementById('pPayAmount');
+  var label=document.getElementById('pAmountLabel');
+  var bal=Number(curRv.balance||0);
+  input.disabled=false;
+  if(mode==='full'){
+    label.textContent='ยอดที่รับเพิ่ม (เต็มยอดคงเหลือ)';
+    input.value=bal;
+    input.disabled=true;
+  }else if(mode==='set'){
+    label.textContent='ยอดชำระแล้วรวมใหม่ (บาท)';
+    input.value=curRv.paidAmount||0;
+  }else{
+    label.textContent='ยอดที่รับเพิ่ม (บาท)';
+    if(Number(input.value||0)>bal) input.value=bal;
+  }
+  updatePreview();
+}
+
+function setQuickPay(rate){
+  if(!curRv)return;
+  document.getElementById('pPayMode').value=rate>=1?'full':'add';
+  document.getElementById('pPayAmount').disabled=false;
+  document.getElementById('pPayAmount').value=Math.round((Number(curRv.balance||0)*rate)*100)/100;
+  updatePaymentMode();
 }
 
 function updatePreview(){
   if(!curRv)return;
-  var np=Number(document.getElementById('pNewPaid').value||0);
-  var bal=Number(curRv.amount)-np;
+  var mode=document.getElementById('pPayMode').value;
+  var value=Number(document.getElementById('pPayAmount').value||0);
+  var amount=Number(curRv.amount||0);
+  var paid=Number(curRv.paidAmount||0);
+  var np=mode==='set'?value:mode==='full'?amount:paid+value;
+  np=Math.max(0,Math.min(amount,np));
+  var received=Math.max(0,np-paid);
+  var bal=amount-np;
   var el=document.getElementById('payPreview');
-  el.textContent=bal<=0?'✅ ชำระครบแล้ว!':'คงค้างอีก '+QuoteFlow.baht(Math.max(0,bal));
+  el.textContent=(received>0?'รับเพิ่ม '+QuoteFlow.baht(received)+' · ':'')+(bal<=0?'✅ ชำระครบแล้ว':'คงค้างอีก '+QuoteFlow.baht(Math.max(0,bal)));
   el.style.color=bal<=0?'var(--green)':'var(--red)';
 }
 
 function updatePay(){
   if(_saving)return;
   var id=document.getElementById('pId').value;
-  var paid=Number(document.getElementById('pNewPaid').value||0);
+  var mode=document.getElementById('pPayMode').value;
+  var value=Number(document.getElementById('pPayAmount').value||0);
   var note=document.getElementById('pNote').value;
+  if(mode!=='full' && value<=0){QuoteFlow.toast('กรุณาใส่ยอดรับชำระ','error');return;}
+  var payload={id:id,note:note,paymentDate:document.getElementById('pPaymentDate').value};
+  if(mode==='full') payload.paymentMode='full';
+  else if(mode==='set') payload.paidAmount=value;
+  else payload.paymentAmount=value;
   _saving=true; document.getElementById('btnUpdatePay').disabled=true;
-  QuoteFlow.api('updateReceivable',{id:id,paidAmount:paid,note:note}).then(function(r){
+  QuoteFlow.api('updateReceivable',payload).then(function(r){
     _saving=false; document.getElementById('btnUpdatePay').disabled=false;
     if(r.success){QuoteFlow.toast('อัปเดตสำเร็จ! ✅','success');QuoteFlow.closeModal('payUpdateModal');loadRv();}
   });
