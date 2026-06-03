@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>ใบเสนอราคา – QuoteFlow</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -14,7 +13,6 @@
 .qt-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--blue-grad);opacity:0;transition:opacity var(--t);}
 .qt-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--blue-light);}
 .qt-card:hover::before{opacity:1;}
-.qt-amount{font-size:20px;font-weight:700;color:var(--blue);}
 .item-row{display:grid;grid-template-columns:1fr 72px 120px 110px 36px;gap:8px;align-items:center;background:var(--card-alt);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px;}
 .item-num{width:22px;height:22px;border-radius:50%;background:var(--blue-pale);color:var(--blue);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .total-panel{background:linear-gradient(135deg,#f0f7ff,#e8f2ff);border:1px solid var(--border);border-radius:var(--radius-sm);padding:18px 20px;}
@@ -24,18 +22,16 @@
 .tab-btn{padding:7px 18px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--text2);transition:all var(--t);font-family:var(--font);}
 .tab-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-pale);}
 .tab-btn.active{background:var(--blue-grad);color:#fff;border-color:transparent;box-shadow:var(--shadow-sm);}
-.saving-overlay{position:fixed;inset:0;background:rgba(30,58,95,.4);z-index:1000;display:flex;align-items:center;justify-content:center;font-family:'Prompt',sans-serif;color:#fff;font-size:18px;font-weight:600;gap:12px;display:none;}
+.saving-overlay{position:fixed;inset:0;background:rgba(30,58,95,.5);z-index:1000;display:none;align-items:center;justify-content:center;font-family:'Prompt',sans-serif;color:#fff;font-size:18px;font-weight:600;gap:14px;}
 .saving-overlay.show{display:flex;}
+@keyframes spin2{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-
-<!-- Saving overlay -->
 <div class="saving-overlay" id="savingOverlay">
-  <div style="width:32px;height:32px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;"></div>
-  <span>กำลังบันทึก...</span>
+  <div style="width:32px;height:32px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin2 1s linear infinite;"></div>
+  <span>กำลังบันทึก... กรุณารอสักครู่</span>
 </div>
-<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
 <div class="app-layout">
   <div id="nav-root"></div>
@@ -50,17 +46,13 @@
         <button class="btn btn-primary" onclick="openCreate()">+ สร้างใบใหม่</button>
       </div>
     </div>
-
     <div class="page-body">
-      <!-- Stats -->
       <div class="grid grid-4 mb-24">
         <div class="card stat-card blue"><div class="stat-icon">📋</div><div class="stat-value" id="st-all">0</div><div class="stat-label">ทั้งหมด</div></div>
         <div class="card stat-card" style="border-top:3px solid #64748b"><div class="stat-icon" style="background:#f1f5f9;color:#64748b">📁</div><div class="stat-value" id="st-draft">0</div><div class="stat-label">Draft</div></div>
         <div class="card stat-card teal"><div class="stat-icon">⚡</div><div class="stat-value" id="st-active">0</div><div class="stat-label">Active</div></div>
         <div class="card stat-card green"><div class="stat-icon">✅</div><div class="stat-value" id="st-closed">0</div><div class="stat-label">Closed</div></div>
       </div>
-
-      <!-- Filter -->
       <div class="card mb-20" style="padding:16px 20px;">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -76,7 +68,6 @@
           </div>
         </div>
       </div>
-
       <div id="qtGrid" class="qt-grid"></div>
     </div>
   </div>
@@ -92,14 +83,8 @@
     <input type="hidden" id="editId">
     <div style="background:var(--blue-pale);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px;">
       <div class="form-row form-row-2">
-        <div class="form-group">
-          <label class="form-label">👤 ชื่อลูกค้า *</label>
-          <input class="form-input" id="customerName" placeholder="ชื่อบริษัท / ชื่อลูกค้า">
-        </div>
-        <div class="form-group">
-          <label class="form-label">📍 ที่อยู่ / เบอร์โทร</label>
-          <input class="form-input" id="qtNote" placeholder="ที่อยู่ลูกค้า หรือ เงื่อนไขการชำระเงิน">
-        </div>
+        <div class="form-group"><label class="form-label">👤 ชื่อลูกค้า *</label><input class="form-input" id="customerName" placeholder="ชื่อบริษัท / ชื่อลูกค้า"></div>
+        <div class="form-group"><label class="form-label">📍 ที่อยู่ / เงื่อนไขชำระ</label><input class="form-input" id="qtNote" placeholder="ที่อยู่ หรือ เงื่อนไขการชำระเงิน"></div>
       </div>
     </div>
     <div class="flex-between mb-12">
@@ -116,8 +101,7 @@
         <div class="total-row"><span class="text-sm text-muted">ยอดก่อนภาษี</span><span id="disp-sub" class="fw-bold">฿0.00</span></div>
         <div class="total-row">
           <label class="flex-center gap-8" style="cursor:pointer;font-size:13px;color:var(--text2);">
-            <input type="checkbox" id="vatCheck" onchange="recalc()" style="accent-color:var(--blue);width:15px;height:15px;">
-            ภาษีมูลค่าเพิ่ม 7%
+            <input type="checkbox" id="vatCheck" onchange="recalc()" style="accent-color:var(--blue);width:15px;height:15px;"> ภาษีมูลค่าเพิ่ม 7%
           </label>
           <span id="disp-vat" class="text-muted text-sm">฿0.00</span>
         </div>
@@ -146,267 +130,169 @@
 QuoteFlow.requireAuth();
 injectSidebar('quotation');
 
-var quotations   = [];
-var currentQt    = null;
-var filterStatus = 'all';
-var itemCount    = 0;
-var _saving      = false;
+var quotations=[], currentQt=null, filterStatus='all', itemCount=0, _saving=false;
 
-/* ── Item Rows ─────────────────────────────────────── */
-function addItemRow(item) {
-  item = item || {};
-  var id  = itemCount++;
-  var num = document.querySelectorAll('#itemsList .item-row').length + 1;
-  var row = document.createElement('div');
-  row.className = 'item-row';
-  row.id = 'item-' + id;
-  row.innerHTML =
-    '<div style="display:flex;align-items:center;gap:8px;">' +
-      '<span class="item-num">' + num + '</span>' +
-      '<div style="flex:1;display:flex;flex-direction:column;gap:4px;">' +
-        '<input class="form-input" placeholder="ชื่อสินค้า / บริการ" data-field="name" value="' + (item.name||'') + '" style="padding:8px 10px;">' +
-        '<label style="cursor:pointer;font-size:11px;color:var(--text3);">📷 แนบรูป<input type="file" accept="image/*" style="display:none;" onchange="previewImg(this,' + id + ')"></label>' +
-        '<img id="img-' + id + '" style="display:' + (item.img&&item.img.length>5?'block':'none') + ';width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--border);" src="' + (item.img||'') + '">' +
-      '</div>' +
-    '</div>' +
-    '<input class="form-input" type="number" min="1" placeholder="1" data-field="qty" value="' + (item.qty||1) + '" oninput="recalc()" style="text-align:center;padding:8px 6px;">' +
-    '<input class="form-input" type="number" min="0" placeholder="0.00" data-field="price" value="' + (item.price||'') + '" oninput="recalc()" style="text-align:right;padding:8px 10px;">' +
-    '<div id="amt-' + id + '" style="text-align:right;font-weight:700;color:var(--blue);font-size:13px;">฿0.00</div>' +
-    '<button class="btn btn-danger btn-icon btn-sm" onclick="removeItem(\'item-' + id + '\')" title="ลบ">✕</button>';
+function addItemRow(item){
+  item=item||{};
+  var id=itemCount++, num=document.querySelectorAll('#itemsList .item-row').length+1;
+  var row=document.createElement('div');
+  row.className='item-row'; row.id='item-'+id;
+  row.innerHTML=
+    '<div style="display:flex;align-items:center;gap:8px;">'+
+      '<span class="item-num">'+num+'</span>'+
+      '<div style="flex:1;display:flex;flex-direction:column;gap:4px;">'+
+        '<input class="form-input" placeholder="ชื่อสินค้า / บริการ" data-field="name" value="'+(item.name||'')+'" style="padding:8px 10px;">'+
+        '<label style="cursor:pointer;font-size:11px;color:var(--text3);">📷 แนบรูป<input type="file" accept="image/*" style="display:none;" onchange="previewImg(this,'+id+')"></label>'+
+        '<img id="img-'+id+'" style="display:'+(item.img&&item.img.length>5?'block':'none')+';width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--border);" src="'+(item.img||'')+'">'+
+      '</div>'+
+    '</div>'+
+    '<input class="form-input" type="number" min="1" placeholder="1" data-field="qty" value="'+(item.qty||1)+'" oninput="recalc()" style="text-align:center;padding:8px 6px;">'+
+    '<input class="form-input" type="number" min="0" placeholder="0.00" data-field="price" value="'+(item.price||'')+'" oninput="recalc()" style="text-align:right;padding:8px 10px;">'+
+    '<div id="amt-'+id+'" style="text-align:right;font-weight:700;color:var(--blue);font-size:13px;">฿0.00</div>'+
+    '<button class="btn btn-danger btn-icon btn-sm" onclick="removeItem(\'item-'+id+'\')" title="ลบ">✕</button>';
   document.getElementById('itemsList').appendChild(row);
-  row.querySelector('[data-field="name"]').addEventListener('input', recalc);
+  row.querySelector('[data-field="name"]').addEventListener('input',recalc);
   recalc();
 }
 
-function removeItem(id) {
-  var el = document.getElementById(id); if (el) el.remove();
-  recalc();
-  document.querySelectorAll('#itemsList .item-num').forEach(function(e,i){ e.textContent=i+1; });
-}
+function removeItem(id){var el=document.getElementById(id);if(el)el.remove();recalc();document.querySelectorAll('#itemsList .item-num').forEach(function(e,i){e.textContent=i+1;});}
+function previewImg(input,id){var file=input.files[0];if(!file)return;var r=new FileReader();r.onload=function(e){var img=document.getElementById('img-'+id);img.src=e.target.result;img.style.display='block';};r.readAsDataURL(file);}
 
-function previewImg(input, id) {
-  var file = input.files[0]; if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var img = document.getElementById('img-'+id);
-    img.src = e.target.result; img.style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-}
-
-function getItems() {
-  return Array.from(document.querySelectorAll('#itemsList .item-row')).map(function(row) {
-    return {
-      name : (row.querySelector('[data-field="name"]')||{}).value || '',
-      qty  : Number((row.querySelector('[data-field="qty"]')||{}).value || 1),
-      price: Number((row.querySelector('[data-field="price"]')||{}).value || 0),
-      img  : (row.querySelector('img')||{}).src || ''
-    };
+function getItems(){
+  return Array.from(document.querySelectorAll('#itemsList .item-row')).map(function(row){
+    return{name:(row.querySelector('[data-field="name"]')||{}).value||'',qty:Number((row.querySelector('[data-field="qty"]')||{}).value||1),price:Number((row.querySelector('[data-field="price"]')||{}).value||0),img:(row.querySelector('img')||{}).src||''};
   });
 }
 
-function recalc() {
-  var items = getItems(); var sub = 0;
-  items.forEach(function(it,i){
-    var amt = it.qty * it.price; sub += amt;
-    var el = document.getElementById('amt-'+i);
-    if (el) el.textContent = QuoteFlow.baht(amt);
-  });
-  var vat = document.getElementById('vatCheck').checked ? sub*0.07 : 0;
-  document.getElementById('disp-sub').textContent   = QuoteFlow.baht(sub);
-  document.getElementById('disp-vat').textContent   = QuoteFlow.baht(vat);
-  document.getElementById('disp-total').textContent = QuoteFlow.baht(sub+vat);
+function recalc(){
+  var items=getItems(),sub=0;
+  items.forEach(function(it,i){var amt=it.qty*it.price;sub+=amt;var el=document.getElementById('amt-'+i);if(el)el.textContent=QuoteFlow.baht(amt);});
+  var vat=document.getElementById('vatCheck').checked?sub*0.07:0;
+  document.getElementById('disp-sub').textContent=QuoteFlow.baht(sub);
+  document.getElementById('disp-vat').textContent=QuoteFlow.baht(vat);
+  document.getElementById('disp-total').textContent=QuoteFlow.baht(sub+vat);
 }
 
-/* ── Save ──────────────────────────────────────────── */
-function saveQuotation(status) {
-  if (_saving) return;
-  var items = getItems().filter(function(i){ return i.name.trim(); });
-  var cn    = document.getElementById('customerName').value.trim();
-  if (!cn)         { QuoteFlow.toast('กรุณาใส่ชื่อลูกค้า','error'); return; }
-  if (!items.length){ QuoteFlow.toast('กรุณาเพิ่มรายการอย่างน้อย 1 รายการ','error'); return; }
-
-  var sub  = items.reduce(function(s,i){ return s+i.qty*i.price; },0);
-  var vat  = document.getElementById('vatCheck').checked ? sub*0.07 : 0;
-  var data = {
-    customerName: cn,
-    note  : document.getElementById('qtNote').value.trim(),
-    items : items, subtotal: sub, vat: vat, total: sub+vat, status: status
-  };
-  var editId = document.getElementById('editId').value;
-  var action = editId ? 'updateQuotation' : 'createQuotation';
-  if (editId) data.id = editId;
-
-  // แสดง loading
-  _saving = true;
+function saveQuotation(status){
+  if(_saving)return;
+  var items=getItems().filter(function(i){return i.name.trim();});
+  var cn=document.getElementById('customerName').value.trim();
+  if(!cn){QuoteFlow.toast('กรุณาใส่ชื่อลูกค้า','error');return;}
+  if(!items.length){QuoteFlow.toast('กรุณาเพิ่มรายการอย่างน้อย 1 รายการ','error');return;}
+  var sub=items.reduce(function(s,i){return s+i.qty*i.price;},0);
+  var vat=document.getElementById('vatCheck').checked?sub*0.07:0;
+  var data={customerName:cn,note:document.getElementById('qtNote').value.trim(),items:items,subtotal:sub,vat:vat,total:sub+vat,status:status};
+  var editId=document.getElementById('editId').value;
+  if(editId)data.id=editId;
+  _saving=true;
   document.getElementById('savingOverlay').classList.add('show');
-  document.getElementById('btnDraft').disabled    = true;
-  document.getElementById('btnConfirm').disabled  = true;
-
-  QuoteFlow.api(action, data).then(function(res) {
-    _saving = false;
+  document.getElementById('btnDraft').disabled=true;
+  document.getElementById('btnConfirm').disabled=true;
+  QuoteFlow.api(editId?'updateQuotation':'createQuotation',data).then(function(res){
+    _saving=false;
     document.getElementById('savingOverlay').classList.remove('show');
-    document.getElementById('btnDraft').disabled   = false;
-    document.getElementById('btnConfirm').disabled = false;
-
-    if (res.success) {
-      QuoteFlow.toast(editId ? 'อัปเดตสำเร็จ! ✅' : 'สร้างใบสำเร็จ! ✅', 'success');
-      QuoteFlow.closeModal('qtModal');
-      resetForm();
-      // ✅ โหลดข้อมูลใหม่จาก server
-      loadQuotations();
+    document.getElementById('btnDraft').disabled=false;
+    document.getElementById('btnConfirm').disabled=false;
+    if(res.success){
+      QuoteFlow.toast(editId?'อัปเดตสำเร็จ! ✅':'สร้างใบสำเร็จ! ✅','success');
+      QuoteFlow.closeModal('qtModal'); resetForm();
+      setTimeout(loadQuotations,2800);
     } else {
-      QuoteFlow.toast('เกิดข้อผิดพลาด: '+(res.error||''), 'error');
+      QuoteFlow.toast('เกิดข้อผิดพลาด: '+(res.error||''),'error');
     }
   });
 }
 
-function openCreate() { resetForm(); QuoteFlow.openModal('qtModal'); }
-
-function resetForm() {
-  document.getElementById('editId').value        = '';
-  document.getElementById('customerName').value  = '';
-  document.getElementById('qtNote').value        = '';
-  document.getElementById('vatCheck').checked    = false;
-  document.getElementById('itemsList').innerHTML = '';
-  document.getElementById('modalTitle').textContent = '📋 สร้างใบเสนอราคาใหม่';
-  itemCount = 0; recalc();
+function openCreate(){resetForm();QuoteFlow.openModal('qtModal');}
+function resetForm(){
+  document.getElementById('editId').value='';document.getElementById('customerName').value='';
+  document.getElementById('qtNote').value='';document.getElementById('vatCheck').checked=false;
+  document.getElementById('itemsList').innerHTML='';
+  document.getElementById('modalTitle').textContent='📋 สร้างใบเสนอราคาใหม่';
+  itemCount=0;recalc();
 }
 
-/* ── Load ──────────────────────────────────────────── */
-function loadQuotations() {
-  document.getElementById('qtGrid').innerHTML =
-    '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text3);">⏳ กำลังโหลด...</div>';
-  QuoteFlow.api('getQuotations').then(function(res) {
-    if (res.success) {
-      quotations = res.data || [];
-      updateStats(); renderGrid();
-    } else {
-      document.getElementById('qtGrid').innerHTML =
-        '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">⚠️</div><p>โหลดข้อมูลไม่ได้ กรุณา Refresh</p></div>';
-    }
+function loadQuotations(){
+  document.getElementById('qtGrid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3);">⏳ กำลังโหลด...</div>';
+  QuoteFlow.api('getQuotations').then(function(res){
+    if(res.success){quotations=res.data||[];updateStats();renderGrid();}
+    else document.getElementById('qtGrid').innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">⚠️</div><p>โหลดข้อมูลไม่ได้ กรุณา Refresh</p></div>';
   });
 }
 
-function updateStats() {
-  document.getElementById('st-all').textContent    = quotations.length;
-  document.getElementById('st-draft').textContent  = quotations.filter(function(q){return q.status==='Draft';}).length;
-  document.getElementById('st-active').textContent = quotations.filter(function(q){return q.status==='Active';}).length;
-  document.getElementById('st-closed').textContent = quotations.filter(function(q){return q.status==='Closed';}).length;
+function updateStats(){
+  document.getElementById('st-all').textContent   =quotations.length;
+  document.getElementById('st-draft').textContent =quotations.filter(function(q){return q.status==='Draft';}).length;
+  document.getElementById('st-active').textContent=quotations.filter(function(q){return q.status==='Active';}).length;
+  document.getElementById('st-closed').textContent=quotations.filter(function(q){return q.status==='Closed';}).length;
 }
 
-function renderGrid() {
-  var search = document.getElementById('searchInput').value.toLowerCase();
-  var list   = quotations.filter(function(q) {
-    var ms = filterStatus==='all' || q.status===filterStatus;
-    var mq = !search || (q.customerName||'').toLowerCase().indexOf(search)>=0 || (q.id||'').toLowerCase().indexOf(search)>=0;
-    return ms && mq;
-  }).sort(function(a,b){ return (b.createdAt||'').localeCompare(a.createdAt||''); });
-
-  var el = document.getElementById('qtGrid');
-  if (!list.length) {
-    el.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📋</div><p>ยังไม่มีใบเสนอราคา<br><span class="text-xs">กดปุ่ม "+ สร้างใบใหม่" เพื่อเริ่มต้น</span></p></div>';
-    return;
-  }
-  var sc = {Draft:'#64748b',Active:'#0ea5e9',Confirmed:'#3b82f6',Closed:'#8b5cf6'};
-  el.innerHTML = list.map(function(q) {
-    var pct = q.status==='Closed'?100:q.status==='Active'?60:q.status==='Confirmed'?40:20;
-    return '<div class="qt-card" onclick="viewQt(\''+q.id+'\')">'+
-      '<div class="flex-between mb-10"><span style="font-size:11px;font-weight:600;color:var(--text3);">'+q.id+'</span>'+
-      '<span class="badge badge-'+(q.status||'draft').toLowerCase()+'">'+(q.status||'Draft')+'</span></div>'+
-      '<div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px;">'+(q.customerName||'-')+'</div>'+
-      '<div style="font-size:12px;color:var(--text3);margin-bottom:14px;">📅 '+QuoteFlow.fmtDate(q.createdAt)+'</div>'+
-      '<div style="height:3px;background:var(--border2);border-radius:2px;margin-bottom:14px;">'+
-        '<div style="height:100%;width:'+pct+'%;background:'+(sc[q.status]||'#94a3b8')+';border-radius:2px;"></div></div>'+
-      '<div class="flex-between"><span style="font-size:12px;color:var(--text3);">'+(Array.isArray(q.items)?q.items.length:0)+' รายการ</span>'+
-      '<span class="qt-amount">'+QuoteFlow.baht(q.total)+'</span></div></div>';
+function renderGrid(){
+  var search=document.getElementById('searchInput').value.toLowerCase();
+  var list=quotations.filter(function(q){
+    var ms=filterStatus==='all'||q.status===filterStatus;
+    var mq=!search||(q.customerName||'').toLowerCase().indexOf(search)>=0||(q.id||'').toLowerCase().indexOf(search)>=0;
+    return ms&&mq;
+  }).sort(function(a,b){return(b.createdAt||'').localeCompare(a.createdAt||'');});
+  var el=document.getElementById('qtGrid');
+  if(!list.length){el.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📋</div><p>ยังไม่มีใบเสนอราคา<br><span class="text-xs">กดปุ่ม + สร้างใบใหม่</span></p></div>';return;}
+  var sc={Draft:'#64748b',Active:'#0ea5e9',Confirmed:'#3b82f6',Closed:'#8b5cf6'};
+  el.innerHTML=list.map(function(q){
+    var pct=q.status==='Closed'?100:q.status==='Active'?60:q.status==='Confirmed'?40:20;
+    return '<div class="qt-card" onclick="viewQt(\''+q.id+'\')">'+'<div class="flex-between mb-10"><span style="font-size:11px;font-weight:600;color:var(--text3);">'+(q.id||'')+'</span><span class="badge badge-'+(q.status||'draft').toLowerCase()+'">'+(q.status||'Draft')+'</span></div>'+'<div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px;">'+(q.customerName||'-')+'</div>'+'<div style="font-size:12px;color:var(--text3);margin-bottom:14px;">📅 '+QuoteFlow.fmtDate(q.createdAt)+'</div>'+'<div style="height:3px;background:var(--border2);border-radius:2px;margin-bottom:14px;"><div style="height:100%;width:'+pct+'%;background:'+(sc[q.status]||'#94a3b8')+';border-radius:2px;"></div></div>'+'<div class="flex-between"><span style="font-size:12px;color:var(--text3);">'+(Array.isArray(q.items)?q.items.length:0)+' รายการ</span><span style="font-size:20px;font-weight:700;color:var(--blue);">'+QuoteFlow.baht(q.total)+'</span></div></div>';
   }).join('');
 }
 
-/* ── View ──────────────────────────────────────────── */
-function viewQt(id) {
-  currentQt = null;
-  for (var i=0;i<quotations.length;i++) { if(quotations[i].id===id){currentQt=quotations[i];break;} }
-  if (!currentQt) return;
-  var q = currentQt;
-  var items = Array.isArray(q.items)?q.items:[];
-
-  document.getElementById('viewContent').innerHTML =
-    '<div class="qt-report-header">'+
-      '<div class="flex-between" style="flex-wrap:wrap;gap:12px;">'+
-        '<div><div style="font-size:12px;opacity:.75;margin-bottom:4px;">ใบเสนอราคา / QUOTATION</div>'+
-        '<div style="font-size:22px;font-weight:700;">'+(q.customerName||'-')+'</div></div>'+
-        '<div style="text-align:right;"><div style="font-size:18px;font-weight:700;">'+(q.id||'')+'</div>'+
-        '<div style="font-size:12px;opacity:.75;margin-top:3px;">📅 '+QuoteFlow.fmtDate(q.createdAt)+'</div>'+
-        '<span class="badge badge-'+(q.status||'draft').toLowerCase()+'" style="margin-top:8px;">'+(q.status||'Draft')+'</span></div>'+
-      '</div>'+
-    '</div>'+
-    '<div class="table-wrap mb-16"><table>'+
-      '<thead><tr><th>#</th><th>รายการ</th><th style="text-align:center">จำนวน</th><th style="text-align:right">ราคา/หน่วย</th><th style="text-align:right">รวม</th></tr></thead>'+
-      '<tbody>'+
-        (items.length ? items.map(function(it,i){
-          return '<tr><td style="color:var(--text3);font-size:12px;">'+(i+1)+'</td>'+
-            '<td style="font-weight:500;">'+(it.name||'-')+'</td>'+
-            '<td style="text-align:center;">'+(it.qty||1)+'</td>'+
-            '<td style="text-align:right;">'+QuoteFlow.baht(it.price)+'</td>'+
-            '<td style="text-align:right;font-weight:600;color:var(--blue);">'+QuoteFlow.baht((it.qty||1)*(it.price||0))+'</td></tr>';
-        }).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px;">ไม่มีรายการ</td></tr>') +
-      '</tbody></table></div>'+
-    '<div style="display:flex;justify-content:flex-end;">'+
-      '<div style="background:linear-gradient(135deg,#f0f7ff,#e8f2ff);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 18px;min-width:260px;">'+
-        '<div class="total-row"><span class="text-sm text-muted">ยอดก่อนภาษี</span><span class="fw-bold">'+QuoteFlow.baht(q.subtotal)+'</span></div>'+
-        '<div class="total-row"><span class="text-sm text-muted">ภาษีมูลค่าเพิ่ม 7%</span><span class="text-muted">'+QuoteFlow.baht(q.vat)+'</span></div>'+
-        '<div class="total-final"><span>ยอดรวมทั้งสิ้น</span><span>'+QuoteFlow.baht(q.total)+'</span></div>'+
-      '</div></div>'+
+function viewQt(id){
+  currentQt=null; for(var i=0;i<quotations.length;i++){if(quotations[i].id===id){currentQt=quotations[i];break;}} if(!currentQt)return;
+  var q=currentQt, items=Array.isArray(q.items)?q.items:[];
+  document.getElementById('viewContent').innerHTML=
+    '<div class="qt-report-header"><div class="flex-between" style="flex-wrap:wrap;gap:12px;"><div><div style="font-size:12px;opacity:.75;margin-bottom:4px;">ใบเสนอราคา / QUOTATION</div><div style="font-size:22px;font-weight:700;">'+(q.customerName||'-')+'</div></div><div style="text-align:right;"><div style="font-size:18px;font-weight:700;">'+(q.id||'')+'</div><div style="font-size:12px;opacity:.75;margin-top:3px;">📅 '+QuoteFlow.fmtDate(q.createdAt)+'</div><span class="badge badge-'+(q.status||'draft').toLowerCase()+'" style="margin-top:8px;">'+(q.status||'Draft')+'</span></div></div></div>'+
+    '<div class="table-wrap mb-16"><table><thead><tr><th>#</th><th>รายการ</th><th style="text-align:center">จำนวน</th><th style="text-align:right">ราคา/หน่วย</th><th style="text-align:right">รวม</th></tr></thead><tbody>'+
+    (items.length?items.map(function(it,i){return'<tr><td style="color:var(--text3);font-size:12px;">'+(i+1)+'</td><td style="font-weight:500;">'+(it.name||'-')+'</td><td style="text-align:center;">'+(it.qty||1)+'</td><td style="text-align:right;">'+QuoteFlow.baht(it.price)+'</td><td style="text-align:right;font-weight:600;color:var(--blue);">'+QuoteFlow.baht((it.qty||1)*(it.price||0))+'</td></tr>';}).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px;">ไม่มีรายการ</td></tr>')+
+    '</tbody></table></div>'+
+    '<div style="display:flex;justify-content:flex-end;"><div style="background:linear-gradient(135deg,#f0f7ff,#e8f2ff);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 18px;min-width:260px;">'+
+    '<div class="total-row"><span class="text-sm text-muted">ยอดก่อนภาษี</span><span class="fw-bold">'+QuoteFlow.baht(q.subtotal)+'</span></div>'+
+    '<div class="total-row"><span class="text-sm text-muted">ภาษีมูลค่าเพิ่ม 7%</span><span class="text-muted">'+QuoteFlow.baht(q.vat)+'</span></div>'+
+    '<div class="total-final"><span>ยอดรวมทั้งสิ้น</span><span>'+QuoteFlow.baht(q.total)+'</span></div></div></div>'+
     (q.note?'<div style="margin-top:16px;padding:10px 14px;background:var(--blue-pale);border-radius:8px;font-size:13px;color:var(--blue-dark);">📝 '+q.note+'</div>':'');
 
-  document.getElementById('viewActions').innerHTML =
+  document.getElementById('viewActions').innerHTML=
     '<button class="btn btn-primary" onclick="QuoteFlow.exportQuotationPDF(currentQt)">📄 Export PDF</button>'+
     '<button class="btn btn-outline" onclick="QuoteFlow.shareQuotation(currentQt)">🔗 Share</button>'+
     (q.status!=='Active'&&q.status!=='Closed'?'<button class="btn btn-green" onclick="doActivate()">⚡ Activate</button>':'')+
     '<button class="btn btn-ghost" onclick="doEdit()">✏️ แก้ไข</button>'+
     '<button class="btn btn-danger" onclick="doDelete(\''+q.id+'\')">🗑️ ลบ</button>'+
     '<button class="btn btn-outline" onclick="QuoteFlow.closeModal(\'viewModal\')">ปิด</button>';
-
   QuoteFlow.openModal('viewModal');
 }
 
-function doActivate() {
-  if (!currentQt||!confirm('Activate ใบ '+currentQt.id+'?')) return;
-  QuoteFlow.api('activateOrder',{quotationId:currentQt.id,customerName:currentQt.customerName,total:currentQt.total})
-    .then(function(r){ if(r.success){ QuoteFlow.toast('Activate สำเร็จ! ✅','success'); QuoteFlow.closeModal('viewModal'); loadQuotations(); } });
-}
-
-function doEdit() {
-  QuoteFlow.closeModal('viewModal'); resetForm();
-  document.getElementById('editId').value       = currentQt.id;
-  document.getElementById('customerName').value = currentQt.customerName||'';
-  document.getElementById('qtNote').value       = currentQt.note||'';
-  document.getElementById('modalTitle').textContent = '✏️ แก้ไขใบเสนอราคา';
-  (Array.isArray(currentQt.items)?currentQt.items:[]).forEach(function(i){ addItemRow(i); });
-  if (currentQt.vat>0) document.getElementById('vatCheck').checked=true;
-  recalc(); QuoteFlow.openModal('qtModal');
-}
-
-function doDelete(id) {
-  if (!confirm('ยืนยันการลบ?')) return;
-  QuoteFlow.api('deleteQuotation',{id:id}).then(function(r){
-    if(r.success){ QuoteFlow.toast('ลบสำเร็จ','warn'); QuoteFlow.closeModal('viewModal'); loadQuotations(); }
+function doActivate(){
+  if(!currentQt||!confirm('Activate ใบ '+currentQt.id+'?'))return;
+  QuoteFlow.api('activateOrder',{quotationId:currentQt.id,customerName:currentQt.customerName,total:currentQt.total}).then(function(r){
+    if(r.success){QuoteFlow.toast('Activate สำเร็จ! ✅','success');QuoteFlow.closeModal('viewModal');setTimeout(loadQuotations,2800);}
   });
 }
+function doEdit(){
+  QuoteFlow.closeModal('viewModal');resetForm();
+  document.getElementById('editId').value=currentQt.id;
+  document.getElementById('customerName').value=currentQt.customerName||'';
+  document.getElementById('qtNote').value=currentQt.note||'';
+  document.getElementById('modalTitle').textContent='✏️ แก้ไขใบเสนอราคา';
+  (Array.isArray(currentQt.items)?currentQt.items:[]).forEach(function(i){addItemRow(i);});
+  if(currentQt.vat>0)document.getElementById('vatCheck').checked=true;
+  recalc();QuoteFlow.openModal('qtModal');
+}
+function doDelete(id){
+  if(!confirm('ยืนยันการลบ?'))return;
+  QuoteFlow.api('deleteQuotation',{id:id}).then(function(r){if(r.success){QuoteFlow.toast('ลบสำเร็จ','warn');QuoteFlow.closeModal('viewModal');setTimeout(loadQuotations,2800);}});
+}
 
-/* ── Events ────────────────────────────────────────── */
 document.querySelectorAll('.tab-btn').forEach(function(btn){
-  btn.addEventListener('click',function(){
-    document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
-    btn.classList.add('active');
-    filterStatus = btn.dataset.filter;
-    renderGrid();
-  });
+  btn.addEventListener('click',function(){document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');filterStatus=btn.dataset.filter;renderGrid();});
 });
-document.getElementById('searchInput').addEventListener('input', renderGrid);
-
-resetForm(); addItemRow(); loadQuotations();
+document.getElementById('searchInput').addEventListener('input',renderGrid);
+resetForm();addItemRow();loadQuotations();
 </script>
 </body>
 </html>
